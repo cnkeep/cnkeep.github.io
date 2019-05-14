@@ -1,0 +1,126 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="聚沙成塔"><title>01_执行流程解读 | Mr.Zhang's Blog</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"><link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css?v=2.0.3"><script src="https://unpkg.com/gitalk/dist/gitalk.min.js?v=2.0.3"></script><script src="//cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js?v=2.0.3"></script></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">01_执行流程解读</h1><a id="logo" href="/.">Mr.Zhang's Blog</a><p class="description">奋斗者~</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><search-result></search-result></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">01_执行流程解读</h1><div class="post-meta"><a href="/2018/09/03/04-01_执行流程解读/#comments" class="comment-count"></a><p><span class="date">09月03日, 2018</span><span><a href="/categories/Mybatis/" class="category">Mybatis</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h2 id="执行流程分析"><a href="#执行流程分析" class="headerlink" title="执行流程分析"></a>执行流程分析</h2><blockquote>
+<p>既然mybatis是针对JDBC操作的封装，那我们接下来就拨看云雾见阳光的看看mybatis是如何一步一步的做这些事情的，我们以查询为例。  </p>
+</blockquote>
+<h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><blockquote>
+<p>先看一下基础的jdbc操作有那几个步骤：  </p>
+<blockquote>
+<p><strong>Step1</strong>. 获取连接<br><strong>Step2</strong>. 获取执行动态sql<br><strong>Step3</strong>. 构建预编译对象PrepareStatement<br><strong>Step4</strong>. 设置动态参数<br><strong>Step5</strong>. 通过连接发送执行请求到数据库<br><strong>Step6</strong>. 数据库返回结果集，编辑解析返回结果<br><strong>Step7</strong>. 关闭连接  </p>
+</blockquote>
+</blockquote>
+<blockquote>
+<p>我们如何用mybatis做数据库查询呢？<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MybatisDemo</span></span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">            String resource = <span class="string">"mybatis-config.xml"</span>;</span><br><span class="line">            InputStream inputStream = Resources.getResourceAsStream(resource);</span><br><span class="line">            SqlSessionFactory sqlSessionFactory = <span class="keyword">new</span> SqlSessionFactoryBuilder().build(inputStream);</span><br><span class="line">            </span><br><span class="line">            <span class="keyword">try</span>( SqlSession openSession = sqlSessionFactory.openSession() )&#123;</span><br><span class="line">                 User user = openSession.&lt;User&gt;selectOne(<span class="string">"com.study.mybatis.mapper.UserMapper.select"</span>, <span class="number">1</span>);</span><br><span class="line">                 System.out.println(user);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">```  </span><br><span class="line">&gt; 我们一步一步来解读mybatis具体的查询流程（以id方式为例，Mapper接口方式后面分析）  </span><br><span class="line"></span><br><span class="line">### 正文</span><br><span class="line"></span><br><span class="line">#### 1.获取SqlSession  </span><br><span class="line">&gt; 在mybatis中连接被抽象为SqlSession,但是并不是真正意义上的connection，其通过SqlSessionFactoy.openSession()获取SqlSession。  </span><br><span class="line"></span><br><span class="line">#### 2.获取执行sql  </span><br><span class="line">&gt; 在mybatis中我们是通过mapper.xml来配置sql语句的，而mybatis会通过解析将这些sql语句映射为MappedStatement,一个MappedStatement维护了一条&lt;select|update|delete|insert&gt;节点的封装  </span><br><span class="line">&gt; 我们通过namespace+id去获取一个MappedStatement</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p>//Configuration.class<br> public MappedStatement getMappedStatement(String id, boolean validateIncompleteStatements) {<br>    if (validateIncompleteStatements) {<br>      buildAllStatements();<br>    }<br>    return mappedStatements.get(id);<br>  }<br><figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">#### <span class="number">3.</span> 调用查询方法</span><br></pre></td></tr></table></figure></p>
+<p>//DefaultSqlSession.class<br>@Override<br>  public <e> List<e> selectList(String statement, Object parameter, RowBounds rowBounds) {<br>    try {<br>      MappedStatement ms = configuration.getMappedStatement(statement);<br>      return executor.query(ms, wrapCollection(parameter), rowBounds, Executor.NO_RESULT_HANDLER);<br>    } catch (Exception e) {<br>      throw ExceptionFactory.wrapException(“Error querying database.  Cause: “ + e, e);<br>    } finally {<br>      ErrorContext.instance().reset();<br>    }<br>  }<br> <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;</span><span class="bash"> SqlSession的查询其实质是委托给Executor去执行了，接着来看*Executor*的query方法</span></span><br></pre></td></tr></table></figure></e></e></p>
+<pre><code>@Override
+public &lt;E&gt; List&lt;E&gt; query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
+  BoundSql boundSql = ms.getBoundSql(parameter);
+  CacheKey key = createCacheKey(ms, parameter, rowBounds, boundSql);
+  return query(ms, parameter, rowBounds, resultHandler, key, boundSql);
+</code></pre><p>   }</p>
+<pre><code>@SuppressWarnings(&quot;unchecked&quot;)
+@Override
+public &lt;E&gt; List&lt;E&gt; query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
+  ErrorContext.instance().resource(ms.getResource()).activity(&quot;executing a query&quot;).object(ms.getId());
+  if (closed) {
+    throw new ExecutorException(&quot;Executor was closed.&quot;);
+  }
+  if (queryStack == 0 &amp;&amp; ms.isFlushCacheRequired()) {
+    clearLocalCache();
+  }
+  List&lt;E&gt; list;
+  try {
+    queryStack++;
+    //查询缓存
+    list = resultHandler == null ? (List&lt;E&gt;) localCache.getObject(key) : null;
+    if (list != null) {
+      handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
+    } else {
+      //缓存不存在，查库
+      list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql);
+    }
+  } finally {
+    queryStack--;
+  }
+  if (queryStack == 0) {
+    for (DeferredLoad deferredLoad : deferredLoads) {
+      deferredLoad.load();
+    }
+    // issue #601
+    deferredLoads.clear();
+
+    //清除二级缓存
+    if (configuration.getLocalCacheScope() == LocalCacheScope.STATEMENT) {
+      // issue #482
+      clearLocalCache();
+    }
+  }
+  return list;
+}
+
+
+ @Override
+  public &lt;E&gt; List&lt;E&gt; query(Statement statement, ResultHandler resultHandler) throws SQLException {
+    PreparedStatement ps = (PreparedStatement) statement;
+    ps.execute();
+    return resultSetHandler.&lt;E&gt; handleResultSets(ps);
+  }
+
+  private &lt;E&gt; List&lt;E&gt; queryFromDatabase(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
+      List&lt;E&gt; list;
+      localCache.putObject(key, EXECUTION_PLACEHOLDER);
+      try {
+        list = doQuery(ms, parameter, rowBounds, resultHandler, boundSql);
+      } finally {
+        localCache.removeObject(key);
+      }
+      localCache.putObject(key, list);
+      if (ms.getStatementType() == StatementType.CALLABLE) {
+        localOutputParameterCache.putObject(key, parameter);
+      }
+      return list;
+    }
+</code></pre><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;</span><span class="bash"> BaseExecutor提供模板方法，不同的子类实现不同的doQuery回调接口，我们就看SimpleExecutor类</span></span><br></pre></td></tr></table></figure>
+<pre><code>@Override
+ public &lt;E&gt; List&lt;E&gt; doQuery(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
+   Statement stmt = null;
+   try {
+     Configuration configuration = ms.getConfiguration();
+     //生成StatementHandler代理对象
+     StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
+
+     //利用ParameterHandler完成参数的注入，返回Statement对象
+     stmt = prepareStatement(handler, ms.getStatementLog());
+
+     return handler.&lt;E&gt;query(stmt, resultHandler);
+   } finally {
+     closeStatement(stmt);
+   }
+ }
+</code></pre><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">&gt; sql交由相应的StatementHandler代理对象执行</span><br><span class="line">```          </span><br><span class="line">           <span class="meta">@Override</span></span><br><span class="line">            <span class="keyword">public</span> &lt;E&gt; <span class="function">List&lt;E&gt; <span class="title">query</span><span class="params">(Statement statement, ResultHandler resultHandler)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">              String sql = boundSql.getSql();</span><br><span class="line">              <span class="comment">//执行sql</span></span><br><span class="line">              statement.execute(sql);</span><br><span class="line">              </span><br><span class="line">              <span class="comment">//交由ResultSetHandler完成结果集的映射，最后返回</span></span><br><span class="line">              <span class="keyword">return</span> resultSetHandler.&lt;E&gt;handleResultSets(statement);</span><br><span class="line">            &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><blockquote>
+<p>自此一个简单的执行流程就分析结束了 ，我们来梳理一下流程（如图）:<br> <img src="/2018/09/03/04-01_执行流程解读/images/mybatis_execute_route.png" alt="执行流程"></p>
+<blockquote>
+<ul>
+<li>1.加载配置文件  </li>
+<li>2.通过SqlSessionFactroy获取SqlSession  </li>
+<li>3.通过SqlSession调用方法，传入mapper.xml配置的namespace+id, 动态参数列表  </li>
+<li>4.SqlSession委托给Executor代理对象去执行  </li>
+<li>5.调用相应的ParameterHandler代理对象完成参数的注入  </li>
+<li>6.委托StatementHandler代理对象完成数据库执行  </li>
+<li>7.委托ResultSetHandler代理对象完成结果集的映射操作  </li>
+</ul>
+</blockquote>
+</blockquote>
+</div><div class="post-copyright"><blockquote><p>原文作者: LeiLi.Zhang</p><p>原文链接: <a href="https://cnkeep.github.io/2018/09/03/04-01_执行流程解读/">https://cnkeep.github.io/2018/09/03/04-01_执行流程解读/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"><a href="/tags/Mybatis/">Mybatis</a></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2018/11/04/00-netty_catalog/" class="pre">netty_catalog</a><a href="/2018/09/03/02-从实例入门/" class="next">从实例入门</a></div><div id="comments"><div id="container"><link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css?v=2.0.3"><script type="text/javascript" src="https://unpkg.com/gitalk/dist/gitalk.min.js?v=2.0.3"></script><script type="text/javascript" src="//cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js?v=2.0.3"></script><script>var gitalk = new Gitalk({
+  clientID: '5b6acb94829bddd4a4b2',
+  clientSecret: '718d07f690aa6efee404a48e1ffc762276be4d4a',
+  repo: 'cnkeep.github.io',
+  owner: 'cnkeep',
+  admin: ['cnkeep'],
+  id: md5(window.location.pathname),
+  distractionFreeMode: false,
+  language: 'zh-CN',
+  pagerDirection: 'last'
+})
+gitalk.render('container')</script></div></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#执行流程分析"><span class="toc-number">1.</span> <span class="toc-text">执行流程分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#引言"><span class="toc-number">1.1.</span> <span class="toc-text">引言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-number">1.2.</span> <span class="toc-text">总结</span></a></li></ol></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/02-Redis数据结构之string_01/">Redis数据结构之string_01</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/01-Redis介绍与使用场景/">Redis介绍与使用场景</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/11-Redis之pipeline批量处理/">Redis之pipeline批量处理</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/05-Redis数据结构之集合Set/">Redis数据结构之集合Set</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/09-Redis通讯协议/">Redis通讯协议</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/06-Redis数据结构之有序集合ZSet/">Redis数据结构之有序集合ZSet</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/10-Redis事务/">Redis事务</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/04-Redis数据结构之列表/">Redis数据结构之列表</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/03-Redis数据结构之hash/">Redis数据结构之hash</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/07-Redis数据结构之HyperLogLog/">Redis数据结构之HyperLogLog</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Bugs/">Bugs</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Git/">Git</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lock/">Lock</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Mybatis/">Mybatis</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Netty/">Netty</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Network/">Network</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/ThreadPool/">ThreadPool</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/UML/">UML</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/mysql/">mysql</a><span class="category-list-count">17</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/mysql/" style="font-size: 15px;">mysql</a> <a href="/tags/Docker/" style="font-size: 15px;">Docker</a> <a href="/tags/Redis/" style="font-size: 15px;">Redis</a> <a href="/tags/Linux/" style="font-size: 15px;">Linux</a> <a href="/tags/Git/" style="font-size: 15px;">Git</a> <a href="/tags/Nginx/" style="font-size: 15px;">Nginx</a> <a href="/tags/UML/" style="font-size: 15px;">UML</a> <a href="/tags/Mybatis/" style="font-size: 15px;">Mybatis</a> <a href="/tags/Bugs/" style="font-size: 15px;">Bugs</a> <a href="/tags/Java/" style="font-size: 15px;">Java</a> <a href="/tags/Lock/" style="font-size: 15px;">Lock</a> <a href="/tags/Netty/" style="font-size: 15px;">Netty</a> <a href="/tags/Network/" style="font-size: 15px;">Network</a> <a href="/tags/Shell/" style="font-size: 15px;">Shell</a> <a href="/tags/ThreadPool/" style="font-size: 15px;">ThreadPool</a> <a href="/tags/Tools/" style="font-size: 15px;">Tools</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">二月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">五月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-you"> 友情链接</i></div><ul></ul><a href="http://github.com/cnkeep" title="Github" target="_blank">Github</a></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><span> Copyright &copy;<a href="/." rel="nofollow">LeiLi.Zhang.</a></span><span> Theme by<a rel="nofollow" target="_blank" href="https://github.com/chaooo/hexo-theme-BlueLake"> BlueLake.</a></span><span> Count by<a href="http://busuanzi.ibruce.info/"> busuanzi.</a></span><span> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a></span></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

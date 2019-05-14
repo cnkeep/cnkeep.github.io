@@ -1,0 +1,175 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="聚沙成塔"><title>入门介绍 | Mr.Zhang's Blog</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"><link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css?v=2.0.3"><script src="https://unpkg.com/gitalk/dist/gitalk.min.js?v=2.0.3"></script><script src="//cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js?v=2.0.3"></script></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">入门介绍</h1><a id="logo" href="/.">Mr.Zhang's Blog</a><p class="description">奋斗者~</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><search-result></search-result></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">入门介绍</h1><div class="post-meta"><a href="/2018/09/02/01-入门介绍/#comments" class="comment-count"></a><p><span class="date">09月02日, 2018</span><span><a href="/categories/Mybatis/" class="category">Mybatis</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h2 id="Mybatis入门介绍"><a href="#Mybatis入门介绍" class="headerlink" title="Mybatis入门介绍"></a>Mybatis入门介绍</h2><h3 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h3><blockquote>
+<p>最开始学习jdbc知识的时候，考虑一下我们是如何编写程序的？<br>大概分为几个步骤:  </p>
+<ol>
+<li>配置基本参数  </li>
+<li>获取连接资源  </li>
+<li>编译sql</li>
+<li>设置参数</li>
+<li>执行sql</li>
+<li>获取查询结果集</li>
+<li>遍历结果集   </li>
+<li>释放连接资源   </li>
+</ol>
+</blockquote>
+<blockquote>
+<p>我们写个最简单的例子看一下：<br><code>`</code>java<br>import java.sql.<em>;<br>import java.util.</em>;<br>    public class JDBCUtil{</p>
+</blockquote>
+<pre><code>private static String url;
+    private static String username;
+    private static String pwd;
+    private static String driverClass;
+
+    //step 1:
+    static {
+        url = &quot;jdbc:mysql://127.0.0.1:3306/jdbc?useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true&amp;failOverReadOnly=false&quot;;
+        username = &quot;root&quot;;
+        pwd = &quot;123456&quot;;
+        driverClass = &quot;com.mysql.jdbc.Driver&quot;;
+    }
+
+    public static Connection getConnection() throws ClassNotFoundException, SQLException {
+        Class.forName(driverClass);
+        return java.sql.DriverManager.getConnection(url, username, pwd);
+    }
+
+    /**
+     * 查询接口
+     *
+     * @param sql    执行的查询sql,参数使用?占位
+     * @param params 占位符对应的参数列表
+     * @return List&lt;Map&lt;String,Object&gt;&gt; 查询结果，每行数据采用map存储，key=columnName,value = columnValue
+     */
+    public static List&lt;Map&lt;String,Object&gt;&gt; query(String sql, java.util.List&lt;Object&gt; params) throws SQLException, ClassNotFoundException {
+        //step 2:
+        java.sql.Connection connection = getConnection();
+
+        //step 3:
+        // 这里使用预编译的statement，防止sql注入
+        java.sql.PreparedStatement preparedStatement = connection.prepareStatement(sql);
+
+        //step 4: 
+        // 设置参数
+        invokeParams(preparedStatement, params);
+
+        //step 5 and 6:
+        java.sql.ResultSet resultSet = preparedStatement.executeQuery();
+
+        //step 7: 
+        // 解析查询结果
+        List&lt;Map&lt;String,Object&gt;&gt; result = parseResult(resultSet);
+
+        //step 8:
+        // 关闭资源
+        close(resultSet, preparedStatement, connection);
+        return result;
+    }
+
+
+    /**
+     * 参数设置
+     *
+     * @param preparedStatement
+     * @param params
+     * @throws SQLException
+     */
+    public static void invokeParams(java.sql.PreparedStatement preparedStatement, java.util.List params) throws SQLException {
+        if (null == preparedStatement || null == params)
+            throw new IllegalArgumentException(&quot;[NullPointerException],params can not be null&quot;);
+
+        ParameterMetaData parameterMetaData = preparedStatement.getParameterMetaData();
+        int parameterCount = parameterMetaData.getParameterCount();
+        if (parameterCount &lt; params.size()) {
+            throw new IllegalArgumentException(&quot;params&apos;s size is worn, the size should be &quot; + parameterCount);
+        }
+
+        for (int index = 1; index &lt;= parameterCount; index++) {
+            preparedStatement.setObject(index, params.get(index-1));
+        }
+    }
+
+
+    /**
+     * 结果解析
+     *
+     * @param resultSet
+     */
+    private static List&lt;Map&lt;String, Object&gt;&gt; parseResult(ResultSet resultSet) throws SQLException {
+        List&lt;Map&lt;String, Object&gt;&gt; resultList = new LinkedList&lt;Map&lt;String, Object&gt;&gt;();
+        ResultSetMetaData metaData = resultSet.getMetaData();
+        int columnCount = metaData.getColumnCount();
+        while (resultSet.next()) {
+            Map&lt;String, Object&gt; rowData = new HashMap&lt;String, Object&gt;();
+            for (int index = 1; index &lt;= columnCount; index++) {
+                String key = metaData.getColumnLabel(index);
+                Object value = resultSet.getObject(index);
+                rowData.put(key, value);
+            }
+            resultList.add(Collections.unmodifiableMap(rowData));
+        }
+        return resultList;
+    }
+
+    private static void close(ResultSet resultSet, PreparedStatement preparedStatement, Connection connection) {
+        try {
+            if (null != resultSet)
+                resultSet.close();
+            if (null != preparedStatement)
+                preparedStatement.close();
+            if (null != connection)
+                connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public static void main(String[] args) throws SQLException, ClassNotFoundException {
+        String sql = &quot;select * from customer where id=?&quot;;
+        List&lt;Object&gt; params = new LinkedList&lt;Object&gt;();
+        params.add(1);
+        List&lt;Map&lt;String, Object&gt;&gt; query = query(sql, params);
+        System.out.println(query);
+    }
+
+}
+</code></pre><p><code>`</code>  </p>
+<blockquote>
+<p>我们可以看到就简单的查询就这么多复杂的代码，既要连接数据库，又要设置参数，遍历结果集，而且其中很大一部分都是通用的，每次都写太麻烦了。<br>有人就想到写一些工具类,来处理这些事情，类似于模板模式，同时在利用反射机制，就可以直接注入对象，结果集也可以直接反射成对象。完美！<br>这种工具有一个高大上的名称叫ORM(对象关系映射)，Mybatis就是这么一个工具，节省开发工作量。</p>
+</blockquote>
+<h3 id="利弊"><a href="#利弊" class="headerlink" title="利弊"></a>利弊</h3><blockquote>
+<p>比较常用的ORM框架就是Hibernate和Mybatis,那么各自有什么优缺点呢？  </p>
+<ul>
+<li>Hibernate<br>   Hibernate的DAO层开发比MyBatis简单，Mybatis需要维护SQL和结果映射。<br>   Hibernate对对象的维护和缓存要比MyBatis好，对增删改查的对象的维护要方便。<br>   Hibernate数据库移植性很好，MyBatis的数据库移植性不好，不同的数据库需要写不同SQL。<br>   Hibernate有更好的二级缓存机制，可以使用第三方缓存。MyBatis本身提供的缓存机制不佳。<br>   强大、方便、高效、复杂、间接、全自动化    </li>
+</ul>
+</blockquote>
+<blockquote>
+<ul>
+<li>Mybatis<br>   Mybatis可以进行更为细致的SQL优化，可以减少查询字段。<br>   Mybatis容易掌握，而Hibernate门槛较高。<br>   小巧、方便、高效、简单、直接、半自动化 </li>
+</ul>
+</blockquote>
+<h3 id="主要的几个类"><a href="#主要的几个类" class="headerlink" title="主要的几个类"></a>主要的几个类</h3><blockquote>
+<ul>
+<li><code>Configuration</code>: Mybatis的配置信息都在该类中  </li>
+<li><code>SqlSession</code>: 作为MyBatis工作的主要顶层API，表示和数据库交互的会话，完成必要数据库增删改查功能，类似于connection</li>
+<li><code>Executor</code>: 执行器，是MyBatis 调度的核心，负责SQL语句的生成和查询缓存的维护</li>
+<li><code>StatementHandler</code>: 封装了JDBC Statement操作，负责对JDBC statement 的操作，如设置参数、将Statement结果集转换成List集合。  </li>
+<li><code>ParameterHandler</code>: 负责将用户传递的参数转换成JDBC statement锁需要的参数。  </li>
+<li><code>ResultHandler</code>: 负责将JDBC返回的ResultSet结果集装换为List集合</li>
+<li><code>TypeHandler</code>: 负责java数据类型和JDBC数据类型之间的映射和转化</li>
+<li><code>MappedStatement</code>: MappedStatement维护了一条&lt;select|update|delete|insert&gt;节点的封装  </li>
+<li><code>SqlSource</code>: 负责根据用户传递的parameterObject，动态地生成SQL语句，将信息封装到BoundSql对象中，并返回 </li>
+<li><code>BoundSql</code>: 表示动态生成的SQL语句以及相应的参数信息 </li>
+</ul>
+</blockquote>
+</div><div class="post-copyright"><blockquote><p>原文作者: LeiLi.Zhang</p><p>原文链接: <a href="https://cnkeep.github.io/2018/09/02/01-入门介绍/">https://cnkeep.github.io/2018/09/02/01-入门介绍/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"><a href="/tags/Mybatis/">Mybatis</a></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2018/09/02/08-01_事务/" class="pre">01_事务</a><a href="/2018/09/02/02-从实例入门/" class="next">从实例入门</a></div><div id="comments"><div id="container"><link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css?v=2.0.3"><script type="text/javascript" src="https://unpkg.com/gitalk/dist/gitalk.min.js?v=2.0.3"></script><script type="text/javascript" src="//cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js?v=2.0.3"></script><script>var gitalk = new Gitalk({
+  clientID: '5b6acb94829bddd4a4b2',
+  clientSecret: '718d07f690aa6efee404a48e1ffc762276be4d4a',
+  repo: 'cnkeep.github.io',
+  owner: 'cnkeep',
+  admin: ['cnkeep'],
+  id: md5(window.location.pathname),
+  distractionFreeMode: false,
+  language: 'zh-CN',
+  pagerDirection: 'last'
+})
+gitalk.render('container')</script></div></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Mybatis入门介绍"><span class="toc-number">1.</span> <span class="toc-text">Mybatis入门介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#应用场景"><span class="toc-number">1.1.</span> <span class="toc-text">应用场景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#利弊"><span class="toc-number">1.2.</span> <span class="toc-text">利弊</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#主要的几个类"><span class="toc-number">1.3.</span> <span class="toc-text">主要的几个类</span></a></li></ol></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/03-Redis数据结构之hash/">Redis数据结构之hash</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/09-Redis通讯协议/">Redis通讯协议</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/10-Redis事务/">Redis事务</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/01-Redis介绍与使用场景/">Redis介绍与使用场景</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/06-Redis数据结构之有序集合ZSet/">Redis数据结构之有序集合ZSet</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/08-Redis的处理模型/">Redis的处理模型</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/02-Redis数据结构之string_01/">Redis数据结构之string_01</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/05-Redis数据结构之集合Set/">Redis数据结构之集合Set</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/07-Redis数据结构之HyperLogLog/">Redis数据结构之HyperLogLog</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/04-Redis数据结构之列表/">Redis数据结构之列表</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Mybatis/">Mybatis</a><span class="category-list-count">122</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/Mybatis/" style="font-size: 15px;">Mybatis</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">二月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">五月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-you"> 友情链接</i></div><ul></ul><a href="http://github.com/cnkeep" title="Github" target="_blank">Github</a></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><span> Copyright &copy;<a href="/." rel="nofollow">LeiLi.Zhang.</a></span><span> Theme by<a rel="nofollow" target="_blank" href="https://github.com/chaooo/hexo-theme-BlueLake"> BlueLake.</a></span><span> Count by<a href="http://busuanzi.ibruce.info/"> busuanzi.</a></span><span> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a></span></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

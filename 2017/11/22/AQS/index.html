@@ -1,0 +1,144 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="聚沙成塔"><title>AQS | Mr.Zhang's Blog</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"><link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css?v=2.0.3"><script src="https://unpkg.com/gitalk/dist/gitalk.min.js?v=2.0.3"></script><script src="//cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js?v=2.0.3"></script></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">AQS</h1><a id="logo" href="/.">Mr.Zhang's Blog</a><p class="description">奋斗者~</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><search-result></search-result></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">AQS</h1><div class="post-meta"><a href="/2017/11/22/AQS/#comments" class="comment-count"></a><p><span class="date">11月22日, 2017</span><span><a href="/categories/Mybatis/" class="category">Mybatis</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h1 id="AQS"><a href="#AQS" class="headerlink" title="AQS"></a>AQS</h1><blockquote>
+<p>AQS -&gt; ReentrantLock -&gt; Condition -&gt; Lock -&gt; Thread<br><code>AQS</code>&nbsp;、<code>CAS</code></p>
+</blockquote>
+<h3 id="What-it-is"><a href="#What-it-is" class="headerlink" title="What it is?"></a>What it is?</h3><blockquote>
+<p><code>AQS(AbstactQueueSynchronizer)</code>:抽象的队列式同步器，AQS定义了一套多线程访问共享资源的同步器框架，<br>许多同步类实现都依赖于它，如常用的ReentrantLock/Semaphore/CountDownLatch…<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">### How does it works?</span><br><span class="line">&gt; ![figure-01](images/aqs-1.png)  </span><br><span class="line"></span><br><span class="line">*入口acquire(int args);</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<pre><code>public final void acquire(int arg) {
+      if (!tryAcquire(arg) &amp;&amp;
+          acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
+          selfInterrupt();
+}
+</code></pre><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;</span><span class="bash">我们把这个方法拆分来看</span></span><br></pre></td></tr></table></figure>
+<pre><code>public final void acquire(int arg) {
+    /** 尝试去独占资源，此方法由子类实现**/
+    boolean fastAcquire = tryAcquire(args);
+
+    /**尝试独占资源失败**/
+    if(!fastAcquire){
+        /**将当前线程包装成新节点，并且插入到等待队列的队尾，并返回当前线程所在的结点**/
+        Node node = addWaiter(Node.EXCLUSIVE);
+        /**当前线程进入等待状态，ps:有可能在此过程中独占资源成功，返回是否在过程中存在中断**/
+        boolean acquireQueued = acquireQueued(node,arg);
+
+        /**响应中断**/
+        if(acquireQueued){
+          selfInterrupt();
+        }
+    }
+}
+
+/**
+* 再来细细看一下将当前线程加入到等待队列的过程
+*/
+private Node addWaiter(Node mode) {
+        Node node = new Node(Thread.currentThread(), mode);
+
+        /** 先尝试去添加一次（本地CAS操作），
+        * 1.成功则返回当前节点;
+        * 2.失败则利用CAS操作设置直至成功
+        */
+        Node pred = tail;
+        if (pred != null) {
+            node.prev = pred;
+            if (compareAndSetTail(pred, node)) {
+                pred.next = node;
+                return node;
+            }
+        }
+        enq(node);
+        return node;
+}
+
+/**
+* 可以看到enq就是典型的CAS操作
+*/
+private Node enq(final Node node) {
+    for (;;) {
+        Node t = tail;
+        if (t == null) { // Must initialize
+            if (compareAndSetHead(new Node()))
+                tail = head;
+        } else {
+            node.prev = t;
+            if (compareAndSetTail(t, node)) {
+                t.next = node;
+                return t;
+            }
+        }
+    }
+}
+
+/**
+* 在队列中休眠等待，CAS操作直到获取锁了才返回
+*/
+ final boolean acquireQueued(final Node node, int arg) {
+        boolean failed = true;
+        try {
+            boolean interrupted = false;
+            for (;;) {
+                final Node p = node.predecessor();//获取前驱节点
+
+                /**前驱节点是头结点，尝试独占资源，（被唤醒或者中断导致）**/
+                if (p == head &amp;&amp; tryAcquire(arg)) {
+                    setHead(node);
+                    p.next = null; // help GC
+                    failed = false;
+                    return interrupted;
+                }
+                /**检查是否需要被阻塞
+                * 1：前一个节点设置了自身获得资源时唤醒后继节点；
+                * 2：之前的节点有的节点放弃了获取，则找到最近的一个设置了获取资源会唤醒后继节点的节点，然后将当前节点追加到其后。
+                */
+                if (shouldParkAfterFailedAcquire(p, node) &amp;&amp;
+                    parkAndCheckInterrupt())
+                    //parkAndCheckInterrupt():检查线程是否发生了中断，这里会清除中断标示位，所以需要selfInterrupt():让当前线程自己产生一个中断。
+                    interrupted = true;
+            }
+        } finally {
+            if (failed)
+                cancelAcquire(node);
+        }
+ }
+
+
+ // 返回“当前线程是否应该阻塞”  
+ private static boolean shouldParkAfterFailedAcquire(Node pred, Node node) {  
+     // 前继节点的状态  
+     int ws = pred.waitStatus;  
+
+     // 如果前继节点是SIGNAL状态，则意味这当前线程需要被unpark唤醒。此时，返回true。  
+     if (ws == Node.SIGNAL)  
+         return true;  
+
+     // 如果前继节点是“取消”状态，则设置 “当前节点”的 “当前前继节点”  为  “‘原前继节点’的前继节点”。  
+     if (ws &gt; 0) {  
+         do {  
+             node.prev = pred = pred.prev;  
+         } while (pred.waitStatus &gt; 0);  
+         pred.next = node;  
+     } else {  
+         // 如果前继节点为“0”或者“共享锁”状态，则设置前继节点为SIGNAL状态。  
+         compareAndSetWaitStatus(pred, ws, Node.SIGNAL);  
+     }  
+     return false;  
+ }
+</code></pre><p><code>`</code></p>
+<blockquote>
+<p><code>LockSupport</code>：此类与<code>wait()</code>和<code>notify()</code>操作线程的挂起和唤醒功能相同，不同的是它不需要像wait和notify要写在同步代码块内。它是并发包下的一个工具，依托于<code>Unsafe</code>类完成线程阻塞和唤醒的功能<br><code>Unsafe</code>：java提供的访问系统底层硬件的工具，其中最常用的就是CAS、线程的阻塞和唤醒</p>
+</blockquote>
+<blockquote>
+<p><a href="https://blog.csdn.net/ls5718/article/details/52563959" target="_blank" rel="noopener">转载：Java中CAS详解</a><br><a href="https://mp.weixin.qq.com/s/eyZyzk8ZzjwzZYN4a4H5YA" target="_blank" rel="noopener">转载：Java并发之AQS详解</a><br><a href="https://blog.csdn.net/opensure/article/details/53349698" target="_blank" rel="noopener">转载：java并发包系列—LockSupport</a></p>
+</blockquote>
+</div><div class="post-copyright"><blockquote><p>原文作者: LeiLi.Zhang</p><p>原文链接: <a href="https://cnkeep.github.io/2017/11/22/AQS/">https://cnkeep.github.io/2017/11/22/AQS/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"><a href="/tags/Mybatis/">Mybatis</a></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2017/11/22/07-Condition_diff_wait_notify/" class="pre">Condition_diff_wait_notify</a><a href="/2017/11/22/02-volatile探究/" class="next">volatile探究</a></div><div id="comments"><div id="container"><link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css?v=2.0.3"><script type="text/javascript" src="https://unpkg.com/gitalk/dist/gitalk.min.js?v=2.0.3"></script><script type="text/javascript" src="//cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js?v=2.0.3"></script><script>var gitalk = new Gitalk({
+  clientID: '5b6acb94829bddd4a4b2',
+  clientSecret: '718d07f690aa6efee404a48e1ffc762276be4d4a',
+  repo: 'cnkeep.github.io',
+  owner: 'cnkeep',
+  admin: ['cnkeep'],
+  id: md5(window.location.pathname),
+  distractionFreeMode: false,
+  language: 'zh-CN',
+  pagerDirection: 'last'
+})
+gitalk.render('container')</script></div></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#AQS"><span class="toc-number">1.</span> <span class="toc-text">AQS</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#What-it-is"><span class="toc-number">1.0.1.</span> <span class="toc-text">What it is?</span></a></li></ol></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/03-Redis数据结构之hash/">Redis数据结构之hash</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/09-Redis通讯协议/">Redis通讯协议</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/10-Redis事务/">Redis事务</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/01-Redis介绍与使用场景/">Redis介绍与使用场景</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/06-Redis数据结构之有序集合ZSet/">Redis数据结构之有序集合ZSet</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/08-Redis的处理模型/">Redis的处理模型</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/02-Redis数据结构之string_01/">Redis数据结构之string_01</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/05-Redis数据结构之集合Set/">Redis数据结构之集合Set</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/07-Redis数据结构之HyperLogLog/">Redis数据结构之HyperLogLog</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/04-Redis数据结构之列表/">Redis数据结构之列表</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Mybatis/">Mybatis</a><span class="category-list-count">122</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/Mybatis/" style="font-size: 15px;">Mybatis</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">二月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">五月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-you"> 友情链接</i></div><ul></ul><a href="http://github.com/cnkeep" title="Github" target="_blank">Github</a></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><span> Copyright &copy;<a href="/." rel="nofollow">LeiLi.Zhang.</a></span><span> Theme by<a rel="nofollow" target="_blank" href="https://github.com/chaooo/hexo-theme-BlueLake"> BlueLake.</a></span><span> Count by<a href="http://busuanzi.ibruce.info/"> busuanzi.</a></span><span> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a></span></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

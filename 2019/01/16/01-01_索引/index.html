@@ -1,0 +1,65 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="聚沙成塔"><title>01_索引 | Mr.Zhang's Blog</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"><link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css?v=2.0.3"><script src="https://unpkg.com/gitalk/dist/gitalk.min.js?v=2.0.3"></script><script src="//cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js?v=2.0.3"></script></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">01_索引</h1><a id="logo" href="/.">Mr.Zhang's Blog</a><p class="description">奋斗者~</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><search-result></search-result></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">01_索引</h1><div class="post-meta"><a href="/2019/01/16/01-01_索引/#comments" class="comment-count"></a><p><span class="date">01月16日, 2019</span><span><a href="/categories/Mybatis/" class="category">Mybatis</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h2 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h2><blockquote>
+<p><a href="http://www.cnblogs.com/linhaifeng/articles/7274563.html" target="_blank" rel="noopener">参考：linhaifeng-第八篇：索引原理与慢查询优化</a><br><a href="http://blog.codinglabs.org/articles/theory-of-mysql-index.html" target="_blank" rel="noopener">参考：张洋-MySQL索引背后的数据结构及算法原理</a>    </p>
+</blockquote>
+<p>【目录】<br><a href="#1.介绍">1.介绍</a><br><a href="#2.索引的原理">2.索引的原理</a>  </p>
+<ul>
+<li><a href="#2.1索引的理念">2.1索引的理念</a>   </li>
+<li><a href="#2.2磁盘IO与预读取">2.2磁盘IO与预读取</a>    </li>
+<li><a href="#2.3索引的数据结构">2.3索引的数据结构</a>    </li>
+</ul>
+<h2 id="1-介绍"><a href="#1-介绍" class="headerlink" title="1.介绍"></a>1.介绍</h2><blockquote>
+<p>为什么要用索引  </p>
+</blockquote>
+<p>&nbsp;&nbsp;在数据库操作中，占据主要地位的当属<strong>Select</strong>操作了，系统80%的操作都来自于系统的查询操作。当数据量大之后，查询的性能将成为<br>系统的瓶颈，这时候就需要一种快速且使用的规则去满足我们查询的需求，所以用索引就是为了提高我们系统的查询效率。索引主要做了两件事：<code>查询</code>和<code>排序</code>.     </p>
+<blockquote>
+<p>索引是什么  </p>
+</blockquote>
+<p>&nbsp;&nbsp;索引是存储引擎用于快速查找数据记录的一种<code>数据结构</code>。 索引就像字典中的音序表(MYSQL实际实现不是)，要查找某个字，先查找音序表<br>就能快速找到页数，不必一页一页的查找。索引对于性能的影响尤为重要，索引查询优化也是一个程序员的必修课。   </p>
+<h2 id="2-索引的原理"><a href="#2-索引的原理" class="headerlink" title="2.索引的原理"></a>2.索引的原理</h2><blockquote>
+<p>接下来我们就来了解一下Mysql的Innodb引擎是如何实现索引的</p>
+</blockquote>
+<h3 id="2-1索引的理念"><a href="#2-1索引的理念" class="headerlink" title="2.1索引的理念"></a>2.1索引的理念</h3><p>&nbsp;&nbsp;以前在学习数据结构时，关于查找算法，我们知道有Hash,二分法，其实质都是通过不断的缩小数据范围，减少需要扫描的数据和次数，<br>数据库查询也是这种理念，但是是结合查询需求和IO考量而实现的。  </p>
+<h3 id="2-2磁盘IO与预读取"><a href="#2-2磁盘IO与预读取" class="headerlink" title="2.2磁盘IO与预读取"></a>2.2磁盘IO与预读取</h3><blockquote>
+<p>&nbsp;&nbsp;说道数据存储我们不能不考量磁盘IO的影响，那我们来看看我们的磁盘是如何加载数据的。</p>
+</blockquote>
+<p><img src="/2019/01/16/01-01_索引/images/disk_io_diff.png" alt>  </p>
+<p>&nbsp;&nbsp;上图是操作系统读取不同数据的性能对比，可以看到磁盘读取和内存读取差了好几个数据量，那么数据库几百万的数据读写，<br>磁盘的性能读写优化也很重要。<br>&nbsp;&nbsp;考虑到磁盘IO是非常昂贵的操作，计算机系统做了一些优化-<code>预读取</code>。<strong>当一次IO操作是，不止加载当前磁盘地址的数据进内存，<br>而且会把相邻地址的数据也会读取到内存中</strong>，因为<code>局部预读性原理</code>告诉我们，当计算机访问一个地址的数据的时候，与其相邻的数据也会很快被访问到。<br>每一次IO读取的数据我们称之为一页(page)。具体一页有多大数据跟操作系统有关，一般为4k或8k，也就是我们读取一页内的数据时候，实际上才发生了<br>一次IO，这个理论对于索引的数据结构设计非常有帮助。      </p>
+<h3 id="2-3索引的数据结构"><a href="#2-3索引的数据结构" class="headerlink" title="2.3索引的数据结构"></a>2.3索引的数据结构</h3><blockquote>
+<p>&nbsp;&nbsp;Innodb存储引擎采用<code></code>B+Tree`实现索引结构，Innodb的数据文件本身就是索引文件(MyISAM索引和数据文件是分离的)。</p>
+</blockquote>
+<p><img src="/2019/01/16/01-01_索引/images/BTree_join_key.png" alt>  </p>
+<p>如图是Innodb主索引的示意图，它有如下特点：  </p>
+<ul>
+<li>每一个节点都对应着一个磁盘块，一个磁盘块的大小与操作系统的页大小有关，可以一次加载整个数据块到内存中;  </li>
+<li>这棵树的叶子节点data域保存了完整的数据记录，叶子节点之间连接为一条链。这种索引交聚集索引，因为InnoDB的数据文件本身要按主键聚集，<br>所以InnoDB要求表必须有主键（MyISAM可以没有），如果没有显式指定，则MySQL系统会自动选择一个可以唯一标识数据记录的列作为主键，<br>如果不存在这种列，则MySQL自动为InnoDB表生成一个隐含字段作为主键，这个字段长度为6个字节，类型为长整形。正是因为如此，使用索引查找非常快;   </li>
+<li>非叶子结点记录着关键字和指向下层数据块的指针，不存储数据记录，这样可以一次加载更多的关键字，减少IO，快速定位叶子节点;    </li>
+<li>这棵树一般在2~4层，所以IO次数不高    </li>
+<li>因为索引有序，且子节点相互连接，所以非常适合范围查找   </li>
+</ul>
+<blockquote>
+<p>查找过程   </p>
+</blockquote>
+<p>例如要查找30，先将根数据块加载到内存，查找判断子数据块的位置，再将子数据块加载进内存，继续查找，直到到达叶子节点，因为叶子节点直接存储着数据记录，<br>所以直接读取即可。   </p>
+<blockquote>
+<p>索引注意的点   </p>
+</blockquote>
+<p>因为B+的这些性质，这就导致我们在编写sql时要注意以下：  </p>
+<ul>
+<li>索引字段尽量小：索引字段小每个数据块存储的关键字更多，减少IO,和分页的发生，更快找到叶子节点；  </li>
+<li>索引的最左匹配特性：当我们使用组合索引时，一定要注意索引的顺序，例如index(A,B,C),查询使用(A,B),(A,C),(A,B,C)均是可以使用到该索引的，<br>但是查询使用(B),(C),(B,C)根据最左匹配规则是无法使用该索引的。   </li>
+<li>索引尽量保证有序：因为B+数是建立在排序上的，假如主键无序，可能要进行频繁的分页，同时也增加了查找的复杂度(不能使用二分法)。   </li>
+<li>选择性建立索引：因为索引在插入删除时也需要维护</li>
+</ul>
+<p>下节介绍索引的分类</p>
+</div><div class="post-copyright"><blockquote><p>原文作者: LeiLi.Zhang</p><p>原文链接: <a href="https://cnkeep.github.io/2019/01/16/01-01_索引/">https://cnkeep.github.io/2019/01/16/01-01_索引/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"><a href="/tags/Mybatis/">Mybatis</a></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2019/02/02/01-Redis介绍与安装/" class="pre">Redis介绍与安装</a><a href="/2019/01/16/03-01_Mysql联接查询算法/" class="next">01_Mysql联接查询算法</a></div><div id="comments"><div id="container"><link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css?v=2.0.3"><script type="text/javascript" src="https://unpkg.com/gitalk/dist/gitalk.min.js?v=2.0.3"></script><script type="text/javascript" src="//cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js?v=2.0.3"></script><script>var gitalk = new Gitalk({
+  clientID: '5b6acb94829bddd4a4b2',
+  clientSecret: '718d07f690aa6efee404a48e1ffc762276be4d4a',
+  repo: 'cnkeep.github.io',
+  owner: 'cnkeep',
+  admin: ['cnkeep'],
+  id: md5(window.location.pathname),
+  distractionFreeMode: false,
+  language: 'zh-CN',
+  pagerDirection: 'last'
+})
+gitalk.render('container')</script></div></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#索引"><span class="toc-number">1.</span> <span class="toc-text">索引</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-介绍"><span class="toc-number">2.</span> <span class="toc-text">1.介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-索引的原理"><span class="toc-number">3.</span> <span class="toc-text">2.索引的原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1索引的理念"><span class="toc-number">3.1.</span> <span class="toc-text">2.1索引的理念</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2磁盘IO与预读取"><span class="toc-number">3.2.</span> <span class="toc-text">2.2磁盘IO与预读取</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3索引的数据结构"><span class="toc-number">3.3.</span> <span class="toc-text">2.3索引的数据结构</span></a></li></ol></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/03-Redis数据结构之hash/">Redis数据结构之hash</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/09-Redis通讯协议/">Redis通讯协议</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/10-Redis事务/">Redis事务</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/01-Redis介绍与使用场景/">Redis介绍与使用场景</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/06-Redis数据结构之有序集合ZSet/">Redis数据结构之有序集合ZSet</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/08-Redis的处理模型/">Redis的处理模型</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/02-Redis数据结构之string_01/">Redis数据结构之string_01</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/05-Redis数据结构之集合Set/">Redis数据结构之集合Set</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/07-Redis数据结构之HyperLogLog/">Redis数据结构之HyperLogLog</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/04-Redis数据结构之列表/">Redis数据结构之列表</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Mybatis/">Mybatis</a><span class="category-list-count">122</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/Mybatis/" style="font-size: 15px;">Mybatis</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">二月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">五月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-you"> 友情链接</i></div><ul></ul><a href="http://github.com/cnkeep" title="Github" target="_blank">Github</a></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><span> Copyright &copy;<a href="/." rel="nofollow">LeiLi.Zhang.</a></span><span> Theme by<a rel="nofollow" target="_blank" href="https://github.com/chaooo/hexo-theme-BlueLake"> BlueLake.</a></span><span> Count by<a href="http://busuanzi.ibruce.info/"> busuanzi.</a></span><span> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a></span></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

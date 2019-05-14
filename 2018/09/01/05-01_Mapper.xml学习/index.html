@@ -1,0 +1,244 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="聚沙成塔"><title>01_Mapper.xml学习 | Mr.Zhang's Blog</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"><link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css?v=2.0.3"><script src="https://unpkg.com/gitalk/dist/gitalk.min.js?v=2.0.3"></script><script src="//cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js?v=2.0.3"></script></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">01_Mapper.xml学习</h1><a id="logo" href="/.">Mr.Zhang's Blog</a><p class="description">奋斗者~</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><search-result></search-result></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">01_Mapper.xml学习</h1><div class="post-meta"><a href="/2018/09/01/05-01_Mapper.xml学习/#comments" class="comment-count"></a><p><span class="date">09月01日, 2018</span><span><a href="/categories/Mybatis/" class="category">Mybatis</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h2 id="Mapper-xml学习"><a href="#Mapper-xml学习" class="headerlink" title="Mapper.xml学习"></a><code>Mapper.xml</code>学习</h2><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
+<p>本节我们针对sql的配置映射文件Mapper.xml进行学习<br>目录  </p>
+<blockquote>
+<p>基本元素（按照它们应该被定义的顺序）:  </p>
+<blockquote>
+<ul>
+<li><code>select</code> – 映射查询语句  </li>
+<li><code>sql</code> – 可被其他语句引用的可重用语句块  </li>
+<li><code>insert</code> – 映射插入语句  </li>
+<li><code>update</code> – 映射更新语句  </li>
+<li><code>delete</code> – 映射删除语句  </li>
+<li><code>parameterMap</code> – 已废弃！老式风格的参数映射。内联参数是首选,这个元素可能在将来被移除，这里不会记录。  </li>
+<li><code>resultMap</code> – 是最复杂也是最强大的元素，用来描述如何从数据库结果集中来加载对象。  </li>
+<li><code>cache-ref</code> – 其他命名空间缓存配置的引用。  </li>
+<li><code>cache</code> – 给定命名空间的缓存配置。  </li>
+</ul>
+</blockquote>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>动态sql  </p>
+<blockquote>
+<ul>
+<li><code>#{}</code>和<code>${}</code>区别    </li>
+<li>动态表达式  </li>
+</ul>
+</blockquote>
+</blockquote>
+</blockquote>
+<h2 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h2><h3 id="基本元素"><a href="#基本元素" class="headerlink" title="基本元素"></a>基本元素</h3><h4 id="select"><a href="#select" class="headerlink" title="select"></a>select</h4><blockquote>
+<p>查询语句是 MyBatis 中最常用的元素之一，光能把数据存到数据库中价值并不大，如果还能重新取出来才有用，多数应用也都是查询比修改要频繁。对每个插入、更新或删除操作，通常对应多个查询操作。这是 MyBatis 的基本原则之一，也是将焦点和努力放到查询和结果映射的原因。简单查询的 select 元素是非常简单的。比如：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">"selectPerson"</span> <span class="attr">parameterType</span>=<span class="string">"int"</span> <span class="attr">resultType</span>=<span class="string">"hashmap"</span>&gt;</span></span><br><span class="line">  SELECT * FROM PERSON WHERE ID = #&#123;id&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>这个语句被称作 selectPerson，接受一个 int（或 Integer）类型的参数，并返回一个 HashMap 类型的对象，其中的键是列名，值便是结果行中的对应值。</p>
+</blockquote>
+<blockquote>
+<p>注意参数符号：<strong>#{id}</strong>  </p>
+</blockquote>
+<blockquote>
+<p>这就告诉 MyBatis 创建一个预处理语句参数，通过 JDBC，这样的一个参数在 SQL 中会由一个“?”来标识，并被传递到一个新的预处理语句中，就像这样：<br><figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">// Similar JDBC <span class="meta">code</span>, NOT MyBatis…</span><br><span class="line"><span class="keyword">String </span><span class="keyword">selectPerson </span>= <span class="string">"SELECT * FROM PERSON WHERE ID=?"</span><span class="comment">;</span></span><br><span class="line"><span class="symbol">PreparedStatement</span> ps = conn.prepareStatement(<span class="keyword">selectPerson);</span></span><br><span class="line"><span class="keyword">ps.setInt(1,id);</span></span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>select 元素有很多属性允许你配置，来决定每条语句的作用细节。<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">select</span></span></span><br><span class="line"><span class="tag">  <span class="attr">id</span>=<span class="string">"selectPerson"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">parameterType</span>=<span class="string">"int"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">parameterMap</span>=<span class="string">"deprecated"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">resultType</span>=<span class="string">"hashmap"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">resultMap</span>=<span class="string">"personResultMap"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">flushCache</span>=<span class="string">"false"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">useCache</span>=<span class="string">"true"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">timeout</span>=<span class="string">"10000"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">fetchSize</span>=<span class="string">"256"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">statementType</span>=<span class="string">"PREPARED"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">resultSetType</span>=<span class="string">"FORWARD_ONLY"</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">属性</th>
+<th style="text-align:left">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">id</td>
+<td style="text-align:left">在命名空间中唯一的标识符，可以被用来引用这条语句。</td>
+</tr>
+<tr>
+<td style="text-align:center">parameterType</td>
+<td style="text-align:left">将会传入这条语句的参数类的完全限定名或别名。这个属性是可选的，因为 MyBatis 可以通过 TypeHandler 推断出具体传入语句的参数，默认值为 unset。</td>
+</tr>
+<tr>
+<td style="text-align:center">parameterMap</td>
+<td style="text-align:left">这是引用外部 parameterMap 的已经被废弃的方法。使用内联参数映射和 parameterType 属性。</td>
+</tr>
+<tr>
+<td style="text-align:center">resultType</td>
+<td style="text-align:left">从这条语句中返回的期望类型的类的完全限定名或别名。注意如果是集合情形，那应该是集合可以包含的类型，而不能是集合本身。使用 resultType 或 resultMap，但不能同时使用。</td>
+</tr>
+<tr>
+<td style="text-align:center">resultMap</td>
+<td style="text-align:left">外部 resultMap 的命名引用。结果集的映射是 MyBatis 最强大的特性，对其有一个很好的理解的话，许多复杂映射的情形都能迎刃而解。使用 resultMap 或 resultType，但不能同时使用。</td>
+</tr>
+<tr>
+<td style="text-align:center">flushCache</td>
+<td style="text-align:left">将其设置为 true，任何时候只要语句被调用，都会导致一级缓存和二级缓存都会被清空，默认值：false。</td>
+</tr>
+<tr>
+<td style="text-align:center">useCache</td>
+<td style="text-align:left">将其设置为 true，将会导致本条语句的结果被二级缓存，默认值：对 select 元素为 true。</td>
+</tr>
+<tr>
+<td style="text-align:center">timeout</td>
+<td style="text-align:left">这个设置是在抛出异常之前，驱动程序等待数据库返回请求结果的秒数。默认值为 unset（依赖驱动）。</td>
+</tr>
+<tr>
+<td style="text-align:center">fetchSize</td>
+<td style="text-align:left">这是尝试影响驱动程序每次批量返回的结果行数和这个设置值相等。默认值为 unset（依赖驱动）。</td>
+</tr>
+<tr>
+<td style="text-align:center">statementType</td>
+<td style="text-align:left">STATEMENT，PREPARED 或 CALLABLE 的一个。这会让 MyBatis 分别使用 Statement，PreparedStatement 或 CallableStatement，默认值：PREPARED。</td>
+</tr>
+<tr>
+<td style="text-align:center">resultSetType</td>
+<td style="text-align:left">FORWARD_ONLY，SCROLL_SENSITIVE 或 SCROLL_INSENSITIVE 中的一个，默认值为 unset （依赖驱动）。</td>
+</tr>
+<tr>
+<td style="text-align:center">databaseId</td>
+<td style="text-align:left">如果配置了 databaseIdProvider，MyBatis 会加载所有的不带 databaseId 或匹配当前 databaseId 的语句；如果带或者不带的语句都有，则不带的会被忽略。</td>
+</tr>
+<tr>
+<td style="text-align:center">resultOrdered</td>
+<td style="text-align:left">这个设置仅针对嵌套结果 select 语句适用：如果为 true，就是假设包含了嵌套结果集或是分组了，这样的话当返回一个主结果行的时候，就不会发生有对前面结果集的引用的情况。这就使得在获取嵌套的结果集的时候不至于导致内存不够用。默认值：false。</td>
+</tr>
+<tr>
+<td style="text-align:center">resultSets</td>
+<td style="text-align:left">这个设置仅对多结果集的情况适用，它将列出语句执行后返回的结果集并每个结果集给一个名称，名称是逗号分隔的。</td>
+</tr>
+</tbody>
+</table>
+<h4 id="insert-update-和-delete"><a href="#insert-update-和-delete" class="headerlink" title="insert, update 和 delete"></a>insert, update 和 delete</h4><blockquote>
+<p>数据变更语句 insert，update 和 delete 的实现非常接近：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">insert</span></span></span><br><span class="line"><span class="tag">  <span class="attr">id</span>=<span class="string">"insertAuthor"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">parameterType</span>=<span class="string">"domain.blog.Author"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">flushCache</span>=<span class="string">"true"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">statementType</span>=<span class="string">"PREPARED"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">keyProperty</span>=<span class="string">""</span></span></span><br><span class="line"><span class="tag">  <span class="attr">keyColumn</span>=<span class="string">""</span></span></span><br><span class="line"><span class="tag">  <span class="attr">useGeneratedKeys</span>=<span class="string">""</span></span></span><br><span class="line"><span class="tag">  <span class="attr">timeout</span>=<span class="string">"20"</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">update</span></span></span><br><span class="line"><span class="tag">  <span class="attr">id</span>=<span class="string">"updateAuthor"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">parameterType</span>=<span class="string">"domain.blog.Author"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">flushCache</span>=<span class="string">"true"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">statementType</span>=<span class="string">"PREPARED"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">timeout</span>=<span class="string">"20"</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">delete</span></span></span><br><span class="line"><span class="tag">  <span class="attr">id</span>=<span class="string">"deleteAuthor"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">parameterType</span>=<span class="string">"domain.blog.Author"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">flushCache</span>=<span class="string">"true"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">statementType</span>=<span class="string">"PREPARED"</span></span></span><br><span class="line"><span class="tag">  <span class="attr">timeout</span>=<span class="string">"20"</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">属性</th>
+<th style="text-align:left">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">id</td>
+<td style="text-align:left">命名空间中的唯一标识符，可被用来代表这条语句。</td>
+</tr>
+<tr>
+<td style="text-align:center">parameterType</td>
+<td style="text-align:left">将要传入语句的参数的完全限定类名或别名。这个属性是可选的，因为 MyBatis 可以通过 TypeHandler 推断出具体传入语句的参数，默认值为 unset。</td>
+</tr>
+<tr>
+<td style="text-align:center">parameterMap</td>
+<td style="text-align:left">这是引用外部 parameterMap 的已经被废弃的方法。使用内联参数映射和 parameterType 属性。</td>
+</tr>
+<tr>
+<td style="text-align:center">flushCache</td>
+<td style="text-align:left">将其设置为 true，任何时候只要语句被调用，都会导致本地缓存和二级缓存都会被清空，默认值：true（对应插入、更新和删除语句）。</td>
+</tr>
+<tr>
+<td style="text-align:center">timeout</td>
+<td style="text-align:left">这个设置是在抛出异常之前，驱动程序等待数据库返回请求结果的秒数。默认值为 unset（依赖驱动）。</td>
+</tr>
+<tr>
+<td style="text-align:center">statementType</td>
+<td style="text-align:left">STATEMENT，PREPARED 或 CALLABLE 的一个。这会让 MyBatis 分别使用 Statement，PreparedStatement 或 CallableStatement，默认值：PREPARED。</td>
+</tr>
+<tr>
+<td style="text-align:center">useGeneratedKeys</td>
+<td style="text-align:left">（仅对 insert 和 update 有用）这会令 MyBatis 使用 JDBC 的 getGeneratedKeys 方法来取出由数据库内部生成的主键（比如：像 MySQL 和 SQL Server 这样的关系数据库管理系统的自动递增字段），默认值：false。</td>
+</tr>
+<tr>
+<td style="text-align:center">keyProperty</td>
+<td style="text-align:left">（仅对 insert 和 update 有用）唯一标记一个属性，MyBatis 会通过 getGeneratedKeys 的返回值或者通过 insert 语句的 selectKey 子元素设置它的键值，默认：unset。如果希望得到多个生成的列，也可以是逗号分隔的属性名称列表。</td>
+</tr>
+<tr>
+<td style="text-align:center">keyColumn</td>
+<td style="text-align:left">（仅对 insert 和 update 有用）通过生成的键值设置表中的列名，这个设置仅在某些数据库（像 PostgreSQL）是必须的，当主键列不是表中的第一列的时候需要设置。如果希望得到多个生成的列，也可以是逗号分隔的属性名称列表。</td>
+</tr>
+<tr>
+<td style="text-align:center">databaseId</td>
+<td style="text-align:left">如果配置了 databaseIdProvider，MyBatis 会加载所有的不带 databaseId 或匹配当前 databaseId 的语句；如果带或者不带的语句都有，则不带的会被忽略。</td>
+</tr>
+</tbody>
+</table>
+<h4 id="sql"><a href="#sql" class="headerlink" title="sql"></a><strong>sql</strong></h4><blockquote>
+<p>这个元素可以被用来定义可重用的 SQL 代码段，可以包含在其他语句中。它可以被静态地(在加载参数) 参数化. 不同的属性值通过包含的实例变化. 比如：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">sql</span> <span class="attr">id</span>=<span class="string">"userColumns"</span>&gt;</span> $&#123;alias&#125;.id,$&#123;alias&#125;.username,$&#123;alias&#125;.password <span class="tag">&lt;/<span class="name">sql</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>这个 SQL 片段可以被包含在其他语句中，例如：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">"selectUsers"</span> <span class="attr">resultType</span>=<span class="string">"map"</span>&gt;</span></span><br><span class="line">  select</span><br><span class="line">    <span class="tag">&lt;<span class="name">include</span> <span class="attr">refid</span>=<span class="string">"userColumns"</span>&gt;</span><span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"alias"</span> <span class="attr">value</span>=<span class="string">"t1"</span>/&gt;</span><span class="tag">&lt;/<span class="name">include</span>&gt;</span>,</span><br><span class="line">    <span class="tag">&lt;<span class="name">include</span> <span class="attr">refid</span>=<span class="string">"userColumns"</span>&gt;</span><span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"alias"</span> <span class="attr">value</span>=<span class="string">"t2"</span>/&gt;</span><span class="tag">&lt;/<span class="name">include</span>&gt;</span></span><br><span class="line">  from some_table t1</span><br><span class="line">    cross join some_table t2</span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>属性值也可以被用在 include 元素的 refid 属性里（<include refid="${include_target}">）或 include 内部语句中（${prefix}Table），例如：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">sql</span> <span class="attr">id</span>=<span class="string">"sometable"</span>&gt;</span></span><br><span class="line">  $&#123;prefix&#125;Table</span><br><span class="line"><span class="tag">&lt;/<span class="name">sql</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">sql</span> <span class="attr">id</span>=<span class="string">"someinclude"</span>&gt;</span></span><br><span class="line">  from</span><br><span class="line">    <span class="tag">&lt;<span class="name">include</span> <span class="attr">refid</span>=<span class="string">"$&#123;include_target&#125;"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">sql</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">"select"</span> <span class="attr">resultType</span>=<span class="string">"map"</span>&gt;</span></span><br><span class="line">  select</span><br><span class="line">    field1, field2, field3</span><br><span class="line">  <span class="tag">&lt;<span class="name">include</span> <span class="attr">refid</span>=<span class="string">"someinclude"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"prefix"</span> <span class="attr">value</span>=<span class="string">"Some"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"include_target"</span> <span class="attr">value</span>=<span class="string">"sometable"</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">include</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br></pre></td></tr></table></figure></include></p>
+</blockquote>
+<h4 id="resultMap"><a href="#resultMap" class="headerlink" title="resultMap"></a>resultMap</h4><blockquote>
+<p>结果集映射是mybatis最复杂的部分，mybatis为我们做了很多的工作,给出一个复杂的例子:<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Author</span></span>&#123;</span><br><span class="line">        <span class="keyword">private</span> Integer id;</span><br><span class="line">        <span class="keyword">private</span> String name;</span><br><span class="line">        <span class="comment">//getter and setter</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Comment</span></span>&#123;</span><br><span class="line">        <span class="keyword">private</span> Integer id;</span><br><span class="line">        <span class="keyword">private</span> String content;</span><br><span class="line">        <span class="comment">//getter and setter </span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Blog</span></span>&#123;</span><br><span class="line">        <span class="keyword">private</span> Integer id;</span><br><span class="line">        <span class="keyword">private</span> Author author;</span><br><span class="line">        <span class="keyword">private</span> List&lt;Comment&gt; commentList;</span><br><span class="line">        <span class="keyword">private</span> String title;</span><br><span class="line">        <span class="comment">//getter and setter</span></span><br><span class="line">    &#125;</span><br><span class="line">```    </span><br><span class="line">```xml</span><br><span class="line">    &lt;resultMap id=<span class="string">"detailedBlogResultMap"</span> type=<span class="string">"Blog"</span>&gt;</span><br><span class="line">        &lt;id property=<span class="string">"id"</span> column=<span class="string">"id"</span>/&gt;</span><br><span class="line">        &lt;constructor&gt;</span><br><span class="line">            &lt;idArg column=<span class="string">"blog_id"</span> javaType=<span class="string">"int"</span>/&gt;</span><br><span class="line">        &lt;/constructor&gt;</span><br><span class="line">        &lt;result property=<span class="string">"title"</span> column=<span class="string">"blog_title"</span>/&gt;</span><br><span class="line">        &lt;association  property=<span class="string">"author"</span> javaType=<span class="string">"Author"</span>&gt;</span><br><span class="line">             &lt;id property=<span class="string">"id"</span> column=<span class="string">"author_id"</span>/&gt;&gt;</span><br><span class="line">             &lt;result property=<span class="string">"name"</span> column=<span class="string">"author_name"</span>/&gt;</span><br><span class="line">        &lt;/association&gt;</span><br><span class="line">        &lt;collection property=<span class="string">"commentList"</span> ofType=<span class="string">"Comment"</span>&gt;</span><br><span class="line">            &lt;id property=<span class="string">"id"</span> column=<span class="string">"comment_id"</span>/&gt;</span><br><span class="line">            &lt;result property=<span class="string">"content"</span> column=<span class="string">"content"</span>/&gt;</span><br><span class="line">        &lt;/collection&gt;</span><br><span class="line">        &lt;discriminator javaype=<span class="string">"int"</span> column=<span class="string">"type"</span> &gt;</span><br><span class="line">            &lt;<span class="keyword">case</span> value=<span class="string">""</span> resultType=<span class="string">""</span>/&gt;</span><br><span class="line">        &lt;/discriminator&gt;</span><br><span class="line">    &lt;/resultMap&gt;</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>resultMap</p>
+<ul>
+<li>constructor - 用于在实例化类时，注入结果到构造方法中  <blockquote>
+<ul>
+<li>idArg - ID 参数;标记出作为 ID 的结果可以帮助提高整体性能  </li>
+<li>arg - 将被注入到构造方法的一个普通结果  </li>
+</ul>
+</blockquote>
+</li>
+<li>id – 一个 ID 结果;标记出作为 ID 的结果可以帮助提高整体性能   </li>
+<li>result – 注入到字段或 JavaBean 属性的普通结果  </li>
+<li>association – 一个复杂类型的关联;许多结果将包装成这种类型嵌套结果映射 – 关联可以指定为一个 resultMap 元素，或者引用一个   </li>
+<li>collection – 一个复杂类型的集合嵌套结果映射 – 集合可以指定为一个 resultMap 元素，或者引用一个    </li>
+<li>discriminator – 使用结果值来决定使用哪个 resultMap  <blockquote>
+<ul>
+<li>case – 基于某些值的结果映射嵌套结果映射,一个 case 也是一个映射它本身的结果,因此可以包含很多相 同的元素，或者它可以参照一个外部的 resultMap。  </li>
+</ul>
+</blockquote>
+</li>
+</ul>
+</blockquote>
+<h3 id="动态sql"><a href="#动态sql" class="headerlink" title="动态sql"></a>动态sql</h3><h4 id="和-区别"><a href="#和-区别" class="headerlink" title="#{}和${}区别"></a><code>#{}</code>和<code>${}</code>区别</h4><blockquote>
+<p>有时候我们会在xml的sql中使用到这两者但是这两者有什么区别呢？<br><code>#{}</code>: 属于动态参数，会进行预编译，而且进行类型匹配，用于变量替换<br>　<code>${}</code>: 不会进行类型匹配，用于字符串拼接<br>举个例子：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">"findByName1"</span>&gt;</span></span><br><span class="line">    select * from user where name=#&#123;params.name&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">"findByName2"</span>&gt;</span></span><br><span class="line">    select * from user where id=$&#123;parms.name&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>上面2个sql最终的结果都为：<code>select * from user where name = &#39;zhangsan&#39; &#39;</code>,但是findByName1中的参数会进行预编译参数替换为?,防止sql注入；而findByName2只是简单的字符串替换，使用时应当注意sql注入的问题,但是使用order by或者将表名作为参数传递进来是只能使用${}.</p>
+</blockquote>
+<h4 id="动态表达式"><a href="#动态表达式" class="headerlink" title="动态表达式"></a>动态表达式</h4><blockquote>
+<p>MyBatis 采用功能强大的基于 OGNL 的表达式来提供了动态sql的功能，主要包含:  </p>
+<ul>
+<li>if  </li>
+<li>choose(when, otherwise)  </li>
+<li>trim (where, set)  </li>
+<li>foreach  </li>
+</ul>
+</blockquote>
+<h5 id="if"><a href="#if" class="headerlink" title="if"></a><strong>if</strong></h5><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">"findUserList"</span>&gt;</span></span><br><span class="line">    select * from user</span><br><span class="line">    where state=0</span><br><span class="line">    <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">"path != null"</span>&gt;</span></span><br><span class="line">        and path=#&#123;param.path&#125;</span><br><span class="line">    <span class="tag">&lt;/<span class="name">if</span>&gt;</span>   </span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>这句话意味着，当传入的参数中path存在则筛选条件追加path字段，反之则忽略。 </p>
+<h5 id="choose"><a href="#choose" class="headerlink" title="choose"></a><strong>choose</strong></h5><blockquote>
+<p>有时我们不想应用到所有的条件语句，而只想从中择其一项。针对这种情况，MyBatis 提供了 choose 元素，它有点像 Java 中的 switch 语句。<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">"findUserList"</span>&gt;</span></span><br><span class="line">    select * from user</span><br><span class="line">    where name=#&#123;name&#125;</span><br><span class="line">    <span class="tag">&lt;<span class="name">choose</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="name">when</span> <span class="attr">test</span>=<span class="string">"state != null and state != 0"</span>&gt;</span></span><br><span class="line">                state = #&#123;state&#125;</span><br><span class="line">            <span class="tag">&lt;/<span class="name">when</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">otherwise</span>&gt;</span></span><br><span class="line">                state = 0</span><br><span class="line">            <span class="tag">&lt;/<span class="name">otherwise</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">choose</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>上面的sql意味着，假如存在state字段，则查询参数拼接该字段，否则拼接为默认的参数值。  </p>
+</blockquote>
+<h4 id="trim-where"><a href="#trim-where" class="headerlink" title="trim(where)"></a>trim(where)</h4><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">"findActiveBlogLike"</span></span></span><br><span class="line"><span class="tag">     <span class="attr">resultType</span>=<span class="string">"Blog"</span>&gt;</span></span><br><span class="line">  SELECT * FROM BLOG </span><br><span class="line">  <span class="tag">&lt;<span class="name">where</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">"state != null"</span>&gt;</span></span><br><span class="line">         state = #&#123;state&#125;</span><br><span class="line">    <span class="tag">&lt;/<span class="name">if</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">"title != null"</span>&gt;</span></span><br><span class="line">        AND title like #&#123;title&#125;</span><br><span class="line">    <span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">"author != null and author.name != null"</span>&gt;</span></span><br><span class="line">        AND author_name like #&#123;author.name&#125;</span><br><span class="line">    <span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">where</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>where 元素只会在至少有一个子元素的条件返回 SQL 子句的情况下才去插入“WHERE”子句。而且，若语句的开头为“AND”或“OR”，where 元素也会将它们去除。<br>如果 where 元素没有按正常套路出牌，我们可以通过自定义 trim 元素来定制 where 元素的功能。比如，和 where 元素等价的自定义 trim 元素为：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">    <span class="tag">&lt;<span class="name">trim</span> <span class="attr">prefix</span>=<span class="string">"WHERE"</span> <span class="attr">prefixOverrides</span>=<span class="string">"AND |OR "</span>&gt;</span></span><br><span class="line">      ... </span><br><span class="line">    <span class="tag">&lt;/<span class="name">trim</span>&gt;</span></span><br><span class="line">```       </span><br><span class="line">&gt; prefixOverrides 属性会忽略通过管道分隔的文本序列（注意此例中的空格也是必要的）。它的作用是移除所有指定在 prefixOverrides 属性中的内容，并且插入 prefix 属性中指定的内容。  </span><br><span class="line"></span><br><span class="line">##### foreach  </span><br><span class="line">&gt; 动态 SQL 的另外一个常用的操作需求是对一个集合进行遍历，通常是在构建 IN 条件语句的时候。比如：</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p>  <select id="selectPostIn" resulttype="domain.blog.Post"><br>    SELECT *<br>    FROM POST P<br>    WHERE ID in<br>    <foreach item="item" index="index" collection="list" open="(" separator="," close=")"></foreach></select></p>
+<pre><code>      #{item}
+&lt;/foreach&gt;
+</code></pre><p>  <br><code>`</code></p>
+<blockquote>
+<p>foreach 中的collection取值可以为(list,array,map)  </p>
+</blockquote>
+</div><div class="post-copyright"><blockquote><p>原文作者: LeiLi.Zhang</p><p>原文链接: <a href="https://cnkeep.github.io/2018/09/01/05-01_Mapper.xml学习/">https://cnkeep.github.io/2018/09/01/05-01_Mapper.xml学习/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"><a href="/tags/Mybatis/">Mybatis</a></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2018/09/01/09-01_设计模式/" class="pre">01_设计模式</a><a href="/2018/07/03/01-Keepalived安装配置/" class="next">Keepalived安装配置</a></div><div id="comments"><div id="container"><link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css?v=2.0.3"><script type="text/javascript" src="https://unpkg.com/gitalk/dist/gitalk.min.js?v=2.0.3"></script><script type="text/javascript" src="//cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js?v=2.0.3"></script><script>var gitalk = new Gitalk({
+  clientID: '5b6acb94829bddd4a4b2',
+  clientSecret: '718d07f690aa6efee404a48e1ffc762276be4d4a',
+  repo: 'cnkeep.github.io',
+  owner: 'cnkeep',
+  admin: ['cnkeep'],
+  id: md5(window.location.pathname),
+  distractionFreeMode: false,
+  language: 'zh-CN',
+  pagerDirection: 'last'
+})
+gitalk.render('container')</script></div></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Mapper-xml学习"><span class="toc-number">1.</span> <span class="toc-text">Mapper.xml学习</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">2.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#正文"><span class="toc-number">3.</span> <span class="toc-text">正文</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#基本元素"><span class="toc-number">3.1.</span> <span class="toc-text">基本元素</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#select"><span class="toc-number">3.1.1.</span> <span class="toc-text">select</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#insert-update-和-delete"><span class="toc-number">3.1.2.</span> <span class="toc-text">insert, update 和 delete</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#sql"><span class="toc-number">3.1.3.</span> <span class="toc-text">sql</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#resultMap"><span class="toc-number">3.1.4.</span> <span class="toc-text">resultMap</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#动态sql"><span class="toc-number">3.2.</span> <span class="toc-text">动态sql</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#和-区别"><span class="toc-number">3.2.1.</span> <span class="toc-text">#{}和${}区别</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#动态表达式"><span class="toc-number">3.2.2.</span> <span class="toc-text">动态表达式</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#if"><span class="toc-number">3.2.2.1.</span> <span class="toc-text">if</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#choose"><span class="toc-number">3.2.2.2.</span> <span class="toc-text">choose</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#trim-where"><span class="toc-number">3.2.3.</span> <span class="toc-text">trim(where)</span></a></li></ol></li></ol></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/02-Redis数据结构之string_01/">Redis数据结构之string_01</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/01-Redis介绍与使用场景/">Redis介绍与使用场景</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/11-Redis之pipeline批量处理/">Redis之pipeline批量处理</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/05-Redis数据结构之集合Set/">Redis数据结构之集合Set</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/09-Redis通讯协议/">Redis通讯协议</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/06-Redis数据结构之有序集合ZSet/">Redis数据结构之有序集合ZSet</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/10-Redis事务/">Redis事务</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/04-Redis数据结构之列表/">Redis数据结构之列表</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/03-Redis数据结构之hash/">Redis数据结构之hash</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/07-Redis数据结构之HyperLogLog/">Redis数据结构之HyperLogLog</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Bugs/">Bugs</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Git/">Git</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lock/">Lock</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Mybatis/">Mybatis</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Netty/">Netty</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Network/">Network</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/ThreadPool/">ThreadPool</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/UML/">UML</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/mysql/">mysql</a><span class="category-list-count">17</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/mysql/" style="font-size: 15px;">mysql</a> <a href="/tags/Docker/" style="font-size: 15px;">Docker</a> <a href="/tags/Redis/" style="font-size: 15px;">Redis</a> <a href="/tags/Linux/" style="font-size: 15px;">Linux</a> <a href="/tags/Git/" style="font-size: 15px;">Git</a> <a href="/tags/Nginx/" style="font-size: 15px;">Nginx</a> <a href="/tags/UML/" style="font-size: 15px;">UML</a> <a href="/tags/Mybatis/" style="font-size: 15px;">Mybatis</a> <a href="/tags/Bugs/" style="font-size: 15px;">Bugs</a> <a href="/tags/Java/" style="font-size: 15px;">Java</a> <a href="/tags/Lock/" style="font-size: 15px;">Lock</a> <a href="/tags/Netty/" style="font-size: 15px;">Netty</a> <a href="/tags/Network/" style="font-size: 15px;">Network</a> <a href="/tags/Shell/" style="font-size: 15px;">Shell</a> <a href="/tags/ThreadPool/" style="font-size: 15px;">ThreadPool</a> <a href="/tags/Tools/" style="font-size: 15px;">Tools</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">二月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">五月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-you"> 友情链接</i></div><ul></ul><a href="http://github.com/cnkeep" title="Github" target="_blank">Github</a></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><span> Copyright &copy;<a href="/." rel="nofollow">LeiLi.Zhang.</a></span><span> Theme by<a rel="nofollow" target="_blank" href="https://github.com/chaooo/hexo-theme-BlueLake"> BlueLake.</a></span><span> Count by<a href="http://busuanzi.ibruce.info/"> busuanzi.</a></span><span> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a></span></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="聚沙成塔"><title>Redis数据结构之hash | Mr.Zhang's Blog</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"><link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css?v=2.0.3"><script src="https://unpkg.com/gitalk/dist/gitalk.min.js?v=2.0.3"></script><script src="//cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js?v=2.0.3"></script></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">Redis数据结构之hash</h1><a id="logo" href="/.">Mr.Zhang's Blog</a><p class="description">奋斗者~</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><search-result></search-result></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">Redis数据结构之hash</h1><div class="post-meta"><a href="/2019/02/13/03-Redis数据结构之hash/#comments" class="comment-count"></a><p><span class="date">02月13日, 2019</span><span><a href="/categories/Mybatis/" class="category">Mybatis</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h2 id="Redis数据结构之hash"><a href="#Redis数据结构之hash" class="headerlink" title="Redis数据结构之hash"></a>Redis数据结构之hash</h2><blockquote>
+<p>标签：<code>Redis</code>  </p>
+</blockquote>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
+<p>介绍  </p>
+</blockquote>
+<p>hash表是redis服务器中出现很频繁的数据结构，它类似于JAVA中的HashMap，以键值对的形式出现和存储。  </p>
+<blockquote>
+<p>使用场景   </p>
+</blockquote>
+<p>使用hash，一般是有那种需要两层key的应用场景，也可以是‘删除一个key可以删除所有内容’的场景。<br>比如我们不采用json作为value值的string类型来存储用户信息，而是采用hash多个键值对来存储。 </p>
+<h2 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h2><h3 id="设置值"><a href="#设置值" class="headerlink" title="设置值"></a>设置值</h3><ul>
+<li><code>hset &lt;key&gt; &lt;field&gt; &lt;value&gt;</code>    </li>
+</ul>
+<p>设置 key 指定的哈希集中指定字段的值。如果 key 指定的哈希集不存在，会创建一个新的哈希集并与 key 关联。如果字段在哈希集中存在，它将被重写。<br>返回值：1：field是一个新字段；0：field已存在，覆盖；<br>时间复杂度： O(1)   </p>
+<ul>
+<li><code>hmset &lt;key&gt; &lt;field1&gt; &lt;value1&gt; &lt;field2&gt; &lt;value2&gt;...</code>   </li>
+</ul>
+<p>批量设置哈希集合中字段的值。<br>时间复杂度： O(n)   </p>
+<ul>
+<li><code>hsetnx &lt;key&gt; &lt;field&gt; &lt;value&gt;</code>  </li>
+</ul>
+<p>只在 key 指定的哈希集中不存在指定的字段时，设置字段的值。如果 key 指定的哈希集不存在，会创建一个新的哈希集并与 key 关联。如果字段已存在，该操作无效果。<br>返回值：1：如果字段是新字段，并成功赋值；0：如果已经存在该字段，什么也不做；   </p>
+<h3 id="获取命令"><a href="#获取命令" class="headerlink" title="获取命令"></a>获取命令</h3><ul>
+<li><code>hget &lt;key&gt; &lt;field&gt;</code>  </li>
+</ul>
+<p>获取指定字段的值<br>返回值：nil: 不存在；其他：对应的value<br>时间复杂度：O(1)   </p>
+<ul>
+<li><p><code>hmget &lt;key&gt; &lt;field&gt; &lt;field2&gt;...</code><br>获取多个指定字段的value值   </p>
+</li>
+<li><p><code>hgetall &lt;key&gt;</code><br>返回 key 指定的哈希集中所有的字段和值。返回值中，每个字段名的下一个是它的值，所以返回值的长度是哈希集大小的两倍。   </p>
+</li>
+<li><p><code>hkeys &lt;key&gt;</code><br>返回 key 指定的哈希集中所有字段的名字。   </p>
+</li>
+<li><p><code>hvals &lt;key&gt;</code><br>返回key指定的哈希集中所有字段对应的value值。   </p>
+</li>
+</ul>
+<h3 id="其他命令"><a href="#其他命令" class="headerlink" title="其他命令"></a>其他命令</h3><ul>
+<li><p><code>hlen &lt;key&gt;</code><br>返回 key 指定的哈希集包含的字段的数量。   </p>
+</li>
+<li><p><code>hdel &lt;key&gt; &lt;field&gt;</code><br>从 key 指定的哈希集中移除指定的域。   </p>
+</li>
+<li><p><code>hscan &lt;key&gt;</code><br>增量的迭代一个集合的所有元素，每次只返回一小部分，避免集合过大导致的阻塞。<br>每次被调用都需要使用上一次调用返回的游标作为该次调用的游标参数，以此来延续之前的迭代过程。当SCAN命令的游标参数被设置为 0 时， 服务器将开始一次新的迭代， 而当服务器向用户返回值为 0 的游标时， 表示迭代已结束。   </p>
+</li>
+</ul>
+<h2 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h2><h3 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h3><p>hash内部通过字典结构实现，字典结构类似于HashMap的结构，来看看它们的机构体：  </p>
+<pre><code class="text">//字段结构体
+struct dict{
+    ...
+    dictht ht[2];
+}
+
+//hashtable结构体
+struct dictht{
+    dictEntry** table;
+    long size;
+    long used;
+    ...
+}
+
+//entry结构体
+struct dictEntry{
+    void* key;
+    void* val;
+    dictEntry* next;
+}
+</code></pre>
+<p>dict机构体包含两个hasttable,通常情况下只有一个有值。但是在dict扩容缩容时，需要分配新的hashtable，然后进行渐进式转移，这时候这两个hashtable<br>存储的分别是旧的和新的hashtable.迁移完成后，旧的hashtable会被删除。   </p>
+<p>hashtable的结构和HashMap的结构相似，都是通过分桶的方式解决hash冲突，第一维是数组，第二维是链表，数组中存储的是第二维链表的首元素指针。   </p>
+<h3 id="冲突解决与hash算法"><a href="#冲突解决与hash算法" class="headerlink" title="冲突解决与hash算法"></a>冲突解决与hash算法</h3><h4 id="hash算法"><a href="#hash算法" class="headerlink" title="hash算法"></a>hash算法</h4><p>当字典被用作数据库的底层实现， 或者哈希键的底层实现时， Redis 使用 MurmurHash2 算法来计算键的哈希值。   </p>
+<p>MurmurHash 算法最初由 Austin Appleby 于 2008 年发明， 这种算法的优点在于， 即使输入的键是有规律的， 算法仍能给出一个很好的随机分布性， 并且算法的计算速度也非常快。   </p>
+<p>MurmurHash 算法目前的最新版本为 MurmurHash3 ， 而 Redis 使用的是 MurmurHash2 ， 关于 MurmurHash 算法的更多信息可以参考该算法的主页： <a href="http://code.google.com/p/smhasher/" target="_blank" rel="noopener">http://code.google.com/p/smhasher/</a> 。  </p>
+<h4 id="冲突解决"><a href="#冲突解决" class="headerlink" title="冲突解决"></a>冲突解决</h4><p>无论多么完美的hash算法都无法避免冲突问题，redis也一样，当遇见hah冲突时，redis采用拉链的方式解决冲突。  </p>
+<h3 id="rehash"><a href="#rehash" class="headerlink" title="rehash"></a>rehash</h3><p>随着操作的不断执行， 哈希表保存的键值对会逐渐地增多或者减少， 为了让哈希表的负载因子（load factor）维持在一个合理的范围之内，<br>当哈希表保存的键值对数量太多或者太少时， 程序需要对哈希表的大小进行相应的扩展或者收缩。    </p>
+<p>扩展和收缩哈希表的工作可以通过执行 rehash （重新散列）操作来完成， Redis 对字典的哈希表执行 rehash 的步骤如下：   </p>
+<ul>
+<li><p>为字典的 ht[1] 哈希表分配空间， 这个哈希表的空间大小取决于要执行的操作， 以及 ht[0] 当前包含的键值对数量 （也即是 ht[0].used 属性的值）：   </p>
+<ul>
+<li>如果执行的是扩展操作， 那么 ht[1] 的大小为第一个大于等于 ht[0].used * 2 的 2^n （2 的 n 次方幂）；  </li>
+<li>如果执行的是收缩操作， 那么 ht[1] 的大小为第一个大于等于 ht[0].used 的 2^n 。  </li>
+</ul>
+</li>
+<li><p>将保存在 ht[0] 中的所有键值对 rehash 到 ht[1] 上面： rehash 指的是重新计算键的哈希值和索引值， 然后将键值对放置到 ht[1] 哈希表的指定位置上。   </p>
+</li>
+<li><p>当 ht[0] 包含的所有键值对都迁移到了 ht[1] 之后 （ht[0] 变为空表）， 释放 ht[0] ， 将 ht[1] 设置为 ht[0] ， 并在 ht[1] 新创建一个空白哈希表， 为下一次 rehash 做准备。   </p>
+</li>
+</ul>
+<h3 id="渐进式rehash"><a href="#渐进式rehash" class="headerlink" title="渐进式rehash"></a>渐进式rehash</h3><p>上面提及到了hashtable扩容和缩容时的步骤，如果单纯的按照这样的方式进行迁移数据，那么当遇到哈希表保存的键值对数量巨大时，单线程的redis将会变得<br>及其卡顿，这肯定是无法接受的。但是Redis作为一个高性能的设计，肯定已经考虑到了这一点，它采用了一种渐进式的迁移方案，即不是一次性迁移完成，而是分为多次。   </p>
+<p>它是通过记录迁移下标rehashindex来实现的：  </p>
+<ul>
+<li>为 ht[1] 分配空间， 让字典同时持有 ht[0] 和 ht[1] 两个哈希表。  </li>
+<li>在字典中维持一个索引计数器变量 rehashidx ， 并将它的值设置为 0 ， 表示 rehash 工作正式开始。  </li>
+<li>在 rehash 进行期间， 每次对字典执行添加、删除、查找或者更新操作时， 程序除了执行指定的操作以外， 还会顺带将 ht[0] 哈希表在<br>rehashidx 索引上的所有键值对 rehash 到 ht[1] ， 当 rehash 工作完成之后， 程序将 rehashidx 属性的值增一。  </li>
+<li>随着字典操作的不断执行， 最终在某个时间点上， ht[0] 的所有键值对都会被 rehash 至 ht[1] ， 这时程序将 rehashidx 属性的值设为 -1 ， 表示 rehash 操作已完成。    </li>
+</ul>
+<blockquote>
+<p>渐进式 rehash 的好处在于它采取分而治之的方式， 将 rehash 键值对所需的计算工作均滩到对字典的每个添加、删除、查找和更新操作上， 从而避免了集中式 rehash 而带来的庞大计算量。   </p>
+</blockquote>
+<p>因为在进行渐进式 rehash 的过程中， 字典会同时使用 ht[0] 和 ht[1] 两个哈希表， 所以在渐进式 rehash 进行期间， 字典的删除（delete）、<br>查找（find）、更新（update）等操作会在两个哈希表上进行： 比如说， 要在字典里面查找一个键的话， 程序会先在 ht[0] 里面进行查找，<br>如果没找到的话， 就会继续到 ht[1] 里面进行查找， 诸如此类。    </p>
+<p>另外， 在渐进式 rehash 执行期间， 新添加到字典的键值对一律会被保存到 ht[1] 里面， 而 ht[0] 则不再进行任何添加操作：<br> 这一措施保证了 ht[0] 包含的键值对数量会只减不增， 并随着 rehash 操作的执行而最终变成空表。   </p>
+</div><div class="post-copyright"><blockquote><p>原文作者: LeiLi.Zhang</p><p>原文链接: <a href="https://cnkeep.github.io/2019/02/13/03-Redis数据结构之hash/">https://cnkeep.github.io/2019/02/13/03-Redis数据结构之hash/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"><a href="/tags/Mybatis/">Mybatis</a></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2019/02/13/09-Redis通讯协议/" class="next">Redis通讯协议</a></div><div id="comments"><div id="container"><link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css?v=2.0.3"><script type="text/javascript" src="https://unpkg.com/gitalk/dist/gitalk.min.js?v=2.0.3"></script><script type="text/javascript" src="//cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js?v=2.0.3"></script><script>var gitalk = new Gitalk({
+  clientID: '5b6acb94829bddd4a4b2',
+  clientSecret: '718d07f690aa6efee404a48e1ffc762276be4d4a',
+  repo: 'cnkeep.github.io',
+  owner: 'cnkeep',
+  admin: ['cnkeep'],
+  id: md5(window.location.pathname),
+  distractionFreeMode: false,
+  language: 'zh-CN',
+  pagerDirection: 'last'
+})
+gitalk.render('container')</script></div></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Redis数据结构之hash"><span class="toc-number">1.</span> <span class="toc-text">Redis数据结构之hash</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">2.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#常用命令"><span class="toc-number">3.</span> <span class="toc-text">常用命令</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#设置值"><span class="toc-number">3.1.</span> <span class="toc-text">设置值</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#获取命令"><span class="toc-number">3.2.</span> <span class="toc-text">获取命令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#其他命令"><span class="toc-number">3.3.</span> <span class="toc-text">其他命令</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实现原理"><span class="toc-number">4.</span> <span class="toc-text">实现原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#数据结构"><span class="toc-number">4.1.</span> <span class="toc-text">数据结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#冲突解决与hash算法"><span class="toc-number">4.2.</span> <span class="toc-text">冲突解决与hash算法</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#hash算法"><span class="toc-number">4.2.1.</span> <span class="toc-text">hash算法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#冲突解决"><span class="toc-number">4.2.2.</span> <span class="toc-text">冲突解决</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#rehash"><span class="toc-number">4.3.</span> <span class="toc-text">rehash</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#渐进式rehash"><span class="toc-number">4.4.</span> <span class="toc-text">渐进式rehash</span></a></li></ol></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/03-Redis数据结构之hash/">Redis数据结构之hash</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/09-Redis通讯协议/">Redis通讯协议</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/10-Redis事务/">Redis事务</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/01-Redis介绍与使用场景/">Redis介绍与使用场景</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/06-Redis数据结构之有序集合ZSet/">Redis数据结构之有序集合ZSet</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/08-Redis的处理模型/">Redis的处理模型</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/02-Redis数据结构之string_01/">Redis数据结构之string_01</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/05-Redis数据结构之集合Set/">Redis数据结构之集合Set</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/07-Redis数据结构之HyperLogLog/">Redis数据结构之HyperLogLog</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/04-Redis数据结构之列表/">Redis数据结构之列表</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Mybatis/">Mybatis</a><span class="category-list-count">122</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/Mybatis/" style="font-size: 15px;">Mybatis</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">二月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">五月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-you"> 友情链接</i></div><ul></ul><a href="http://github.com/cnkeep" title="Github" target="_blank">Github</a></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><span> Copyright &copy;<a href="/." rel="nofollow">LeiLi.Zhang.</a></span><span> Theme by<a rel="nofollow" target="_blank" href="https://github.com/chaooo/hexo-theme-BlueLake"> BlueLake.</a></span><span> Count by<a href="http://busuanzi.ibruce.info/"> busuanzi.</a></span><span> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a></span></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

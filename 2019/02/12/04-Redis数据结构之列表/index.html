@@ -1,0 +1,155 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="聚沙成塔"><title>Redis数据结构之列表 | Mr.Zhang's Blog</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"><link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css?v=2.0.3"><script src="https://unpkg.com/gitalk/dist/gitalk.min.js?v=2.0.3"></script><script src="//cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js?v=2.0.3"></script></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">Redis数据结构之列表</h1><a id="logo" href="/.">Mr.Zhang's Blog</a><p class="description">奋斗者~</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><search-result></search-result></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">Redis数据结构之列表</h1><div class="post-meta"><a href="/2019/02/12/04-Redis数据结构之列表/#comments" class="comment-count"></a><p><span class="date">02月12日, 2019</span><span><a href="/categories/Redis/" class="category">Redis</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h2 id="Redis数据结构之列表-list"><a href="#Redis数据结构之列表-list" class="headerlink" title="Redis数据结构之列表(list)"></a>Redis数据结构之列表(list)</h2><blockquote>
+<p>标签：<code>Redis</code>, <code>list</code>, <code>ziplist</code>, <code>linkedlist</code>, <code>quicklist</code>   </p>
+</blockquote>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
+<p>介绍  </p>
+</blockquote>
+<p>列表(list)同样是我们常用的一种数据结构，是一种有序的、可重复的集合。   </p>
+<blockquote>
+<p>使用场景  </p>
+</blockquote>
+<p>可以作为简易的消息队列  </p>
+<h2 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h2><h3 id="设置值"><a href="#设置值" class="headerlink" title="设置值"></a>设置值</h3><ul>
+<li><p><code>lpush/rpush &lt;key&gt; &lt;value&gt; [&lt;value&gt; ...]</code><br>功能：向存于key的列表的左边/右边插入数据，如果key不存在则创建一个空的列表，然后完成插入操作。<br>返回值：操作后列表的长度<br>时间复杂度：o(1)  </p>
+</li>
+<li><p><code>lpushx/rpushx &lt;key&gt; &lt;value&gt; [&lt;value&gt;...]</code><br>功能：如果key存在，则向列表的左边/右边插入数据    </p>
+</li>
+<li><p><code>linsert &lt;key&gt; &lt;before|after&gt; &lt;pivot&gt; &lt;value&gt;</code><br>功能：把value插入存于key的列表中在基准值pivot的前面或后面，当key时，什么也不做。<br>返回值：-1：pivot值不存在；其他：操作完成后的列表长度<br>时间复杂度：O(n)     </p>
+</li>
+<li><p><code>lset &lt;key&gt; &lt;index&gt; &lt;value&gt;</code><br>功能：设置index位置的list元素的值为value，index超出返回时返回错误<br>返回值：成功或失败<br>时间复杂度：O(n)  </p>
+</li>
+</ul>
+<h3 id="获取值"><a href="#获取值" class="headerlink" title="获取值"></a>获取值</h3><ul>
+<li><p><code>lpop/rpop &lt;key&gt;</code><br>功能：移除并返回最左侧/最右侧的元素<br>返回值：元素值 或者 nil<br>时间复杂度：O(1)   </p>
+</li>
+<li><p><code>lrange &lt;key&gt; &lt;start&gt; &lt;end&gt;</code><br>功能：返回存储在 key 的列表里指定范围内的元素。 start 和 end 偏移量都是基于0的下标，即list的第一个元素下标是0（list的表头），第二个元素下标是1，以此类推。<br>偏移量也可以是负数，表示偏移量是从list尾部开始计数。 例如， -1 表示列表的最后一个元素，-2 是倒数第二个，以此类推。   </p>
+</li>
+<li><p><code>blpop/brpop &lt;key&gt;</code><br>功能：阻塞式移除并返回最左侧/最右侧的元素，当列表中没有元素时，会一直阻塞等待    </p>
+</li>
+<li><p><code>lindex &lt;key&gt; &lt;value&gt;</code><br>功能：返回指定下标的元素值   </p>
+</li>
+</ul>
+<h3 id="移除操作"><a href="#移除操作" class="headerlink" title="移除操作"></a>移除操作</h3><ul>
+<li><code>lrem &lt;key&gt; &lt;count&gt; &lt;value&gt;</code><br>功能：从存在于key的列表里移除前count次出现的值为value的元素   <ul>
+<li>count&gt;0: 从头到尾移除前count个值为value的元素；  </li>
+<li>count&lt;0: 从尾到头移除前count个值为value的元素；  </li>
+<li>count=0: 移除所有值为value的元素；   </li>
+</ul>
+</li>
+</ul>
+<p>返回值：返回移除的元素个数   </p>
+<ul>
+<li><code>ltrim &lt;key&gt; &lt;start&gt; &lt;stop&gt;</code><br>功能：修剪(trim)一个已存在的 list，这样 list 就会只包含指定范围的指定元素<br>返回值：成功 或者 失败   </li>
+</ul>
+<h3 id="其他操作"><a href="#其他操作" class="headerlink" title="其他操作"></a>其他操作</h3><ul>
+<li><code>llen &lt;key&gt;</code><br>功能：返回存储在 key 里的list的长度。 如果 key 不存在，那么就被看作是空list，并且返回长度为 0。 当存储在 key 里的值不是一个list的话，会返回error。<br>返回值：列表元素长度<br>时间复杂度：O(1)   </li>
+</ul>
+<h2 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h2><h3 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h3><p> 与java中列表的实现相似，redis也存在多种数组和链表类型的实现方式，在redis中当元素个数较少时使用<code>压缩列表(ziplist)</code>存储，当数据较多时使用<br> <code>双向链表(linkedlist)</code>存储，在后面的版本为了优化内存直接采用了这两者的结合版-<code>快速列表(quicklist)</code>来存储。   </p>
+<h3 id="压缩列表-ziplist"><a href="#压缩列表-ziplist" class="headerlink" title="压缩列表(ziplist)"></a>压缩列表(ziplist)</h3><p>Redis为了节约内存空间使用，zset,hash,list在元素对象较少时，采用压缩列表进程存储。压缩列表是一块连续的内存空间，元素之间紧挨着存储，<br>没有任何冗余空隙。   </p>
+<h4 id="压缩列表的构成"><a href="#压缩列表的构成" class="headerlink" title="压缩列表的构成"></a>压缩列表的构成</h4><p>来看看ziplist的数据结构：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">struct ziplist&lt;T&gt;&#123;</span><br><span class="line">    int32 zlbytes; // 整个压缩列表占用字节数</span><br><span class="line">    int32 zltail_offset; // 最后一个元素距离压缩列表起始位置的偏移量，用于快速定位到最后一个节点</span><br><span class="line">    int16 zllength; // 元素个数</span><br><span class="line">    T[] entries; // 元素内容列表，紧凑存储</span><br><span class="line">    int8 zlend; // 标志压缩列表的结束，值恒为 0xFF</span><br><span class="line">&#125;</span><br><span class="line">```  </span><br><span class="line">![](images/ziplist_001.png)     </span><br><span class="line"></span><br><span class="line"></span><br><span class="line">压缩列表为了支持双向遍历，所以才会有 ztail_offset 这个字段，用来快速定位到最后一个元素，只要知道起始地址，再加上这个偏移量，就可以直接定位到</span><br><span class="line">最后一个元素，然后倒着遍历。   </span><br><span class="line"></span><br><span class="line">#### 压缩列表元素的构成 </span><br><span class="line">每一个压缩列表的元素可以保存一个字节数组或者一个整数值，每个元素都包含下列结构：     </span><br><span class="line">```text</span><br><span class="line">struct entry &#123;</span><br><span class="line">    int&lt;var&gt; prevlen; // 前一个 entry 的字节长度</span><br><span class="line">    int&lt;var&gt; encoding; // 元素类型编码</span><br><span class="line">    optional byte[] content; // 元素内容</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>每个元素都包含三个部分：   </p>
+<ul>
+<li><p><code>prevlen</code><br>该值记录了前一个元素的字节长度，有了这个长度，程序就可以通过指针运算，根据当前结点的起始地址计算出下一个结点的起始地址，以此类推从而可以实现倒序遍历。   </p>
+</li>
+<li><p><code>encoding</code><br>encoding属性记录了结点的content属性的数据类型和长度，通过这些信息就可以完成正序遍历，下表列出了不同类型的编码说明：   </p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:right">编码</th>
+<th style="text-align:center">编码长度</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">00xxxxxx</td>
+<td style="text-align:center">1字节</td>
+<td style="text-align:left">表示最大长度为(2^6-1)字节的短字符串，后6位表示存储字符串的长度</td>
+</tr>
+<tr>
+<td style="text-align:right">01xxxxxx xxxxxxxx</td>
+<td style="text-align:center">2字节</td>
+<td style="text-align:left">表示长度小于(2^14-1)字节的字符串，后14位表示存储字符串的长度</td>
+</tr>
+<tr>
+<td style="text-align:right">10xxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx</td>
+<td style="text-align:center">5字节</td>
+<td style="text-align:left">长度小于等于(2^38-1)字节的字符串</td>
+</tr>
+<tr>
+<td style="text-align:right">11000000</td>
+<td style="text-align:center">1字节</td>
+<td style="text-align:left">int16_t类型的整数，content部分为2个字节长的整数</td>
+</tr>
+<tr>
+<td style="text-align:right">11010000</td>
+<td style="text-align:center">1字节</td>
+<td style="text-align:left">int32_t类型的整数，content部分为4个字节长的整数</td>
+</tr>
+<tr>
+<td style="text-align:right">11100000</td>
+<td style="text-align:center">1字节</td>
+<td style="text-align:left">int64_t类型的整数，content部分为8个字节长的整数</td>
+</tr>
+<tr>
+<td style="text-align:right">11110000</td>
+<td style="text-align:center">1字节</td>
+<td style="text-align:left">int24_t类型的整数，content部分为3个字节长的整数</td>
+</tr>
+<tr>
+<td style="text-align:right">11111110</td>
+<td style="text-align:center">1字节</td>
+<td style="text-align:left">int8_t类型的整数，content部分为1个字节长的整数</td>
+</tr>
+<tr>
+<td style="text-align:right">11111111</td>
+<td style="text-align:center">1字节</td>
+<td style="text-align:left">表示ziplist结束，也就是zlend的值0xFF</td>
+</tr>
+<tr>
+<td style="text-align:right">1111xxxx</td>
+<td style="text-align:center">1字节</td>
+<td style="text-align:left">content部分不存储值，xxxx四位存储了0~12这13的整数</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>content</code><br>存储结点的值，结点的值可以是字节数组或者整数，值的类型和长度有encoding属性决定。   </li>
+</ul>
+<h4 id="级联更新"><a href="#级联更新" class="headerlink" title="级联更新"></a>级联更新</h4><p>前面提到每个 entry 都会有一个 prevlen 字段存储前一个 entry 的长度。如果内容小于 254 字节，prevlen 用 1 字节存储，否则就是 5 字节。<br>这意味着如果某个 entry 经过了修改操作从 253 字节变成了 254 字节，那么它的下一个 entry 的 prevlen 字段就要更新，从 1 个字节扩展到 5<br>个字节；如果这个 entry 的长度本来也是 253 字节，那么后面 entry 的 prevlen 字段还得继续更新。    </p>
+<p>如果 ziplist 里面每个 entry 恰好都存储了 253 字节的内容，那么第一个 entry 内容的修改就会导致后续所有 entry 的级联更新，这就是一个比<br>较耗费计算资源的操作，当然是这种几率是很低的。    </p>
+<h3 id="双向链表-linkedlist"><a href="#双向链表-linkedlist" class="headerlink" title="双向链表(linkedlist)"></a>双向链表(linkedlist)</h3><p>为了支持双向遍历，所以实现的链表方式是双向的，其结构体如下：   </p>
+<ul>
+<li>链表结构体  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">struct list&#123;</span><br><span class="line">    listNode *head;//头结点</span><br><span class="line">    listNode *tail;//尾结点</span><br><span class="line">    unsigned long len;//链表包含结点的数量</span><br><span class="line">&#125;</span><br><span class="line">```  </span><br><span class="line"></span><br><span class="line">* 结点结构体  </span><br><span class="line">```text</span><br><span class="line">struct listNode&#123;</span><br><span class="line">    struct listNode *prev;//前驱结点</span><br><span class="line">    strcut listNode *next;//后驱结点指针</span><br><span class="line">    void *value;//结点值</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>双向链表的结构如下图：<br><img src="/2019/02/12/04-Redis数据结构之列表/images/linkedlist_002.png" alt><br>显然这种数据结构可以支持大量的结点，但是也存在浪费内存(前后驱指针)，随机访问性能差的劣势。   </p>
+<h3 id="快速列表-quicklist"><a href="#快速列表-quicklist" class="headerlink" title="快速列表(quicklist)"></a>快速列表(quicklist)</h3><p>鉴于linkedlist小号内存，ziplist存储能力有限的情况，redis从3.2开始针对列表数据结构进行了改造，使用了quicklist来代替linkedlist和ziplist</p>
+<h4 id="数据结构-1"><a href="#数据结构-1" class="headerlink" title="数据结构"></a>数据结构</h4><p>quickList 是 zipList 和 linkedList 的混合体，它将 linkedList 按段切分，每一段使用 zipList 来紧凑存储，多个 zipList 之间使用双向指针串接起来。 </p>
+<p><img src="/2019/02/12/04-Redis数据结构之列表/images/redis_quicklist.png" alt>   </p>
+<blockquote>
+<p>其结构体如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">// 快速列表</span><br><span class="line">struct quicklist &#123;</span><br><span class="line">    quicklistNode* head;</span><br><span class="line">    quicklistNode* tail;</span><br><span class="line">    long count; // 元素总数</span><br><span class="line">    int nodes; // ziplist 节点的个数</span><br><span class="line">    int compressDepth; // LZF 算法压缩深度</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line">// 快速列表节点</span><br><span class="line">struct quicklistNode &#123;</span><br><span class="line">    quicklistNode* prev;</span><br><span class="line">    quicklistNode* next;</span><br><span class="line">    ziplist* zl; // 指向压缩列表</span><br><span class="line">    int32 size; // ziplist 的字节总数</span><br><span class="line">    int16 count; // ziplist 中的元素数量</span><br><span class="line">    int2 encoding; // 存储形式 2bit，原生字节数组还是 LZF 压缩存储</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">struct ziplist_compressed &#123;</span><br><span class="line">    int32 size;</span><br><span class="line">    byte[] compressed_data;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">struct ziplist &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p>可以看到，为了节省内存，Redis还会对ziplist进行压缩存储，使用 LZF 算法压缩，可以选择压缩深度(不由得感叹，Redis作者对内存的使用真是精致啊)。  </p>
+<blockquote>
+<p>压缩深度   </p>
+</blockquote>
+<p>quicklist 默认的压缩深度是 0，也就是不压缩。压缩的实际深度由配置参数list-compress-depth决定：<br>为了支持快速的 push/pop 操作，quicklist 的首尾两个 ziplist 不压缩，此时深度就是 1。<br>如果深度为 2，就表示 quicklist 的首尾第一个 ziplist 以及首尾第二个 ziplist 都不压缩。   </p>
+<blockquote>
+<p>单个ziplist长度  </p>
+</blockquote>
+<p>quicklist 内部默认单个 ziplist 长度为 8k 字节，超出了这个字节数，就会新起一个 ziplist。<br>ziplist 的长度由配置参数 list-max-ziplist-size 决定。</p>
+</div><div class="post-copyright"><blockquote><p>原文作者: LeiLi.Zhang</p><p>原文链接: <a href="https://cnkeep.github.io/2019/02/12/04-Redis数据结构之列表/">https://cnkeep.github.io/2019/02/12/04-Redis数据结构之列表/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"><a href="/tags/Redis/">Redis</a></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2019/02/12/10-Redis事务/" class="pre">Redis事务</a><a href="/2019/02/11/03-Redis数据结构之hash/" class="next">Redis数据结构之hash</a></div><div id="comments"><div id="container"><link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css?v=2.0.3"><script type="text/javascript" src="https://unpkg.com/gitalk/dist/gitalk.min.js?v=2.0.3"></script><script type="text/javascript" src="//cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js?v=2.0.3"></script><script>var gitalk = new Gitalk({
+  clientID: '5b6acb94829bddd4a4b2',
+  clientSecret: '718d07f690aa6efee404a48e1ffc762276be4d4a',
+  repo: 'cnkeep.github.io',
+  owner: 'cnkeep',
+  admin: ['cnkeep'],
+  id: md5(window.location.pathname),
+  distractionFreeMode: false,
+  language: 'zh-CN',
+  pagerDirection: 'last'
+})
+gitalk.render('container')</script></div></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Redis数据结构之列表-list"><span class="toc-number">1.</span> <span class="toc-text">Redis数据结构之列表(list)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">2.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#常用命令"><span class="toc-number">3.</span> <span class="toc-text">常用命令</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#设置值"><span class="toc-number">3.1.</span> <span class="toc-text">设置值</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#获取值"><span class="toc-number">3.2.</span> <span class="toc-text">获取值</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#移除操作"><span class="toc-number">3.3.</span> <span class="toc-text">移除操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#其他操作"><span class="toc-number">3.4.</span> <span class="toc-text">其他操作</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实现原理"><span class="toc-number">4.</span> <span class="toc-text">实现原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#数据结构"><span class="toc-number">4.1.</span> <span class="toc-text">数据结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#压缩列表-ziplist"><span class="toc-number">4.2.</span> <span class="toc-text">压缩列表(ziplist)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#压缩列表的构成"><span class="toc-number">4.2.1.</span> <span class="toc-text">压缩列表的构成</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#级联更新"><span class="toc-number">4.2.2.</span> <span class="toc-text">级联更新</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#双向链表-linkedlist"><span class="toc-number">4.3.</span> <span class="toc-text">双向链表(linkedlist)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#快速列表-quicklist"><span class="toc-number">4.4.</span> <span class="toc-text">快速列表(quicklist)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#数据结构-1"><span class="toc-number">4.4.1.</span> <span class="toc-text">数据结构</span></a></li></ol></li></ol></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/02-Redis数据结构之string_01/">Redis数据结构之string_01</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/01-Redis介绍与使用场景/">Redis介绍与使用场景</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/13/11-Redis之pipeline批量处理/">Redis之pipeline批量处理</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/05-Redis数据结构之集合Set/">Redis数据结构之集合Set</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/09-Redis通讯协议/">Redis通讯协议</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/06-Redis数据结构之有序集合ZSet/">Redis数据结构之有序集合ZSet</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/10-Redis事务/">Redis事务</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/12/04-Redis数据结构之列表/">Redis数据结构之列表</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/03-Redis数据结构之hash/">Redis数据结构之hash</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/11/07-Redis数据结构之HyperLogLog/">Redis数据结构之HyperLogLog</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Bugs/">Bugs</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Git/">Git</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lock/">Lock</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Mybatis/">Mybatis</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Netty/">Netty</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Network/">Network</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/ThreadPool/">ThreadPool</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/UML/">UML</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/mysql/">mysql</a><span class="category-list-count">17</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/mysql/" style="font-size: 15px;">mysql</a> <a href="/tags/Docker/" style="font-size: 15px;">Docker</a> <a href="/tags/Redis/" style="font-size: 15px;">Redis</a> <a href="/tags/Linux/" style="font-size: 15px;">Linux</a> <a href="/tags/Git/" style="font-size: 15px;">Git</a> <a href="/tags/Nginx/" style="font-size: 15px;">Nginx</a> <a href="/tags/UML/" style="font-size: 15px;">UML</a> <a href="/tags/Mybatis/" style="font-size: 15px;">Mybatis</a> <a href="/tags/Bugs/" style="font-size: 15px;">Bugs</a> <a href="/tags/Java/" style="font-size: 15px;">Java</a> <a href="/tags/Lock/" style="font-size: 15px;">Lock</a> <a href="/tags/Netty/" style="font-size: 15px;">Netty</a> <a href="/tags/Network/" style="font-size: 15px;">Network</a> <a href="/tags/Shell/" style="font-size: 15px;">Shell</a> <a href="/tags/ThreadPool/" style="font-size: 15px;">ThreadPool</a> <a href="/tags/Tools/" style="font-size: 15px;">Tools</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">二月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">五月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-you"> 友情链接</i></div><ul></ul><a href="http://github.com/cnkeep" title="Github" target="_blank">Github</a></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><span> Copyright &copy;<a href="/." rel="nofollow">LeiLi.Zhang.</a></span><span> Theme by<a rel="nofollow" target="_blank" href="https://github.com/chaooo/hexo-theme-BlueLake"> BlueLake.</a></span><span> Count by<a href="http://busuanzi.ibruce.info/"> busuanzi.</a></span><span> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a></span></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>
